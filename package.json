@@ -11,6 +11,7 @@
   "dependencies": {
     "bluebird": "^3.4.7",
     "gm": "^1.23.0",
+    "ics": "^1.2.0",
     "node-telegram-bot-api": "^0.25.0",
     "request": "^2.79.0",
     "restify": "^4.3.0",
