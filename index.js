@@ -134,8 +134,8 @@ var extractTextFromImage = function (file_id, chatId) {
   bot.downloadFile(file_id, IMAGELOOT)
   .then(function(downloadedFilepath){
     new Promise(function(resolve, reject){
-
-        compareImage(downloadedFilepath, IMAGELOOT+"/recent.png", resolve);
+      fs.chmodSync(downloadedFilepath, 777);
+      compareImage(downloadedFilepath, IMAGELOOT+"/recent.png", resolve);
 
     }).then(function(isDoingWork){
 
