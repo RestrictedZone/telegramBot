@@ -115,7 +115,7 @@ var registerSchedule = function(chatId){
     image.crop(TARGETIMAGE, IMAGELOOT + '/timestamp2.png', 600, 80, 20, 860, findTextInImage, chatId);
     image.crop(TARGETIMAGE, IMAGELOOT + '/timestamp3.png', 600, 80, 20, 940, findTextInImage, chatId);  
   } else {
-    console.log(TARGETIMAGE + "is not exist.");
+    console.log(TARGETIMAGE + " is not exist.");
     if(chatId){
       bot.sendMessage(chatId, "저에게 일정 이미지를 보내신적이 없습니다. 일정 이미지를 보내신 후 다시 시도해주세요.");
     }
