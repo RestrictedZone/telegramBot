@@ -32,7 +32,7 @@ tesseract는 영어 인식을 잘하는 편이지만 한국어 인식이 좋지 
 
 우선 텔래그램 botfather에게 받은 api 토큰 값을 적용시키기 위에 아래의 명령어를 입력한 후 `config/index.sample.js`에 token값을 입력합니다.
 
-    sudo mv config/index.sample.js config/index.sample.js
+    sudo mv config/index.sample.js config/index.js
 
 그 다음 아래의 명령어를 통해 프로그램이 실행 됩니다.
 
