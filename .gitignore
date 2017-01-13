@@ -1,5 +1,7 @@
 node_modules
-images
-data/*
+images/*
+data/*.ics
 *.traineddata
-config.js
+config/index.js
+test/*
+npm-debug.log
