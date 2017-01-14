@@ -140,11 +140,11 @@ bot.onText(/\/schedule/, function(msg, match) {
 });
 
 bot.onText(/\/attend/, function(msg, match) {
-  bot.sendMessage(msg.chat.id, msg.chat.first_name + ' ' + msg.chat.last_name+"님께서 "+this.date+" 모임 참석의사를 표현하셨습니다.");
+  bot.sendMessage(msg.chat.id, msg.chat.first_name + ' ' + msg.chat.last_name+"님께서 "+recentSchedule.date+" 모임 참석의사를 표현하셨습니다.");
 });
 
 bot.onText(/\/absent/, function(msg, match) {
-  bot.sendMessage(msg.chat.id, msg.chat.first_name + ' ' + msg.chat.last_name+"님께서 "+this.date+" 모임 불참의사를 표현하셨습니다.");
+  bot.sendMessage(msg.chat.id, msg.chat.first_name + ' ' + msg.chat.last_name+"님께서 "+recentSchedule.date+" 모임 불참의사를 표현하셨습니다.");
 });
 
 // Listen for any kind of message. There are different kinds of messages.
