@@ -37,9 +37,9 @@ var findTextInImage = function(imagePath, chatId, language) {
     } else {
       recentSchedule.extractTextCount++;
     }
+  }).finally(function(){
     // delete cropped image
     fs.unlinkSync(imagePath);
-    return result.text;
   });
 };
 
