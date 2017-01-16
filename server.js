@@ -30,7 +30,6 @@ var findTextInImage = function(imagePath, chatId, language) {
     
     if( recentSchedule.extractTextCount > 3 ){
       recentSchedule.extractTextCount = 0;  
-      recentSchedule.bulidRecentSchedule();
       if(chatId){
         sendSchedule(chatId);
       }
@@ -123,13 +122,13 @@ var registerSchedule = function(chatId){
 };
 
 var sendSchedule = function(chatId){
-    if(recentSchedule.date == ''){
+    if(recentSchedule.isExsited()){
       bot.sendMessage(chatId, '등록된 일정이 없습니다. 정보갱신 시도합니다. 잠시 후 정보가 나타납니다. 잠시만 기다려주세요. 1분이상 응답이 없을 경우 다시 시도해주세요.');
       registerSchedule(chatId);    
     } else {
-      bot.sendMessage(chatId, recentSchedule.scheduleMessage + "\n\n구글 켈린더 링크입니다. " + recentSchedule.eventLinkToGoogle);
+      bot.sendMessage(chatId, recentSchedule.scheduleMessage() + "\n\n구글 켈린더 링크입니다. " + recentSchedule.eventLinkToGoogle());
       // make ics file
-      fs.writeFileSync('data/이번주_개발제한구역일정.ics', recentSchedule.eventICSString);
+      fs.writeFileSync('data/이번주_개발제한구역일정.ics', recentSchedule.eventICSString());
       bot.sendDocument(chatId, 'data/이번주_개발제한구역일정.ics');
     }
 
