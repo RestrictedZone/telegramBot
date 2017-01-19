@@ -1,3 +1,3 @@
 module.exports = {
-    token: 'replace token from botfather. do not use prefix bot-'
+    token: "" // input token from botfather. ex) 321524096:AAEwmApXhULCptJqUMrNECLiyxLEuQ5hAaF
 };

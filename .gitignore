@@ -1,5 +1,5 @@
 node_modules
-images/*
+images/recent.png
 data/*.ics
 *.traineddata
 config/index.js

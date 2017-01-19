@@ -21,6 +21,7 @@
     "bluebird": "^3.4.7",
     "gm": "^1.23.0",
     "ics": "^1.2.0",
+    "moment": "^2.17.1",
     "node-telegram-bot-api": "^0.25.0",
     "tesseract.js": "^1.0.10"
   },

@@ -2,6 +2,7 @@ var fs = require('fs'),
   gm = require('gm'),
   Tesseract = require('tesseract.js'),
   TelegramBot = require('node-telegram-bot-api'),
+  moment = require('moment'),
   Promise = require('bluebird');
 
 var config = require('./config'),
@@ -9,6 +10,8 @@ var config = require('./config'),
   recentSchedule = require('./lib/scheduleData'),
   // Create a bot that uses 'polling' to fetch new updates
   bot = new TelegramBot(config.token, { polling: true });
+  
+moment.locale();
 
 const IMAGELOOT = 'images';
 const TARGETIMAGE = 'images/recent.png';
@@ -27,7 +30,6 @@ var findTextInImage = function(imagePath, chatId, language) {
     console.log( '\n----- '+imagePath+' -----\n' + result.text );
 
     seperateExtractedTextByimageFilename(result.text,imagePath.split('/')[1]);
-    
     if( recentSchedule.extractTextCount > 3 ){
       recentSchedule.extractTextCount = 0;  
       if(chatId){
@@ -122,19 +124,20 @@ var registerSchedule = function(chatId){
 };
 
 var sendSchedule = function(chatId){
-    if(recentSchedule.isExsited()){
-      bot.sendMessage(chatId, '등록된 일정이 없습니다. 정보갱신 시도합니다. 잠시 후 정보가 나타납니다. 잠시만 기다려주세요. 1분이상 응답이 없을 경우 다시 시도해주세요.');
-      registerSchedule(chatId);    
-    } else {
-      bot.sendMessage(chatId, recentSchedule.scheduleMessage() + "\n\n구글 켈린더 링크입니다. " + recentSchedule.eventLinkToGoogle());
-      // make ics file
-      fs.writeFileSync('data/이번주_개발제한구역일정.ics', recentSchedule.eventICSString());
-      bot.sendDocument(chatId, 'data/이번주_개발제한구역일정.ics');
-    }
+  if(recentSchedule.isExsited()){
+    bot.sendMessage(chatId, recentSchedule.scheduleMessage() + "\n\n구글 켈린더 링크입니다. " + recentSchedule.eventLinkToGoogle());
+    // make ics file
+    fs.writeFileSync('data/이번주_개발제한구역일정.ics', recentSchedule.eventICSString());
+    bot.sendDocument(chatId, 'data/이번주_개발제한구역일정.ics');
+  } else {
+    bot.sendMessage(chatId, '등록된 일정이 없습니다. 정보갱신 시도합니다. 잠시 후 정보가 나타납니다. 잠시만 기다려주세요. 1분이상 응답이 없을 경우 다시 시도해주세요.');
+    registerSchedule(chatId); 
+  }
 
 };
 
 bot.onText(/\/schedule/, function(msg, match) {
+  console.log(moment().format('ll') + " " + msg.chat.first_name + ' ' + msg.chat.last_name + "님이 스케쥴을 요청하셨습니다.");
   sendSchedule(msg.chat.id);
 });
 
