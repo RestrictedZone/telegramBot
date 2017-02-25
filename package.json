@@ -13,7 +13,7 @@
   "private": true,
   "scripts": {
     "start": "node server",
-    "test": "node_modules/.bin/mocha $(find ./ -name '*.js') --recursive -w"
+    "test": "node_modules/.bin/mocha $(find ./ -name '*spac.js') --recursive -w"
   },
   "author": "nGenius",
   "license": "MIT",
