@@ -127,6 +127,10 @@ var sendSchedule = function(chatId){
   if(recentSchedule.isExsited()){
     bot.sendMessage(chatId, recentSchedule.scheduleMessage() + "\n\n구글 켈린더 링크입니다. " + recentSchedule.eventLinkToGoogle());
     // make ics file
+    if(!fs.existsSync("./data/")){
+      console.log("make 'data' directory!");
+      fs.mkdirSync("data");
+    }
     fs.writeFileSync('data/이번주_개발제한구역일정.ics', recentSchedule.eventICSString());
     bot.sendDocument(chatId, 'data/이번주_개발제한구역일정.ics');
   } else {
