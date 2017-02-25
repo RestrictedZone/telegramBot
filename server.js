@@ -162,11 +162,11 @@ bot.on('message', function (msg) {
     // send a message to the chat acknowledging receipt of their message
     // TODO : create something new
 
-    if( message.indexOf('안녕') > -1 ){
-      bot.sendMessage(chatId, "안녕하세요!");
-    } else if( message.indexOf('일정') > -1 || message.indexOf('스케쥴') > -1 ) {
-      sendSchedule(chatId);     
-    }
+    // if( message.indexOf('안녕') > -1 ){
+    //   bot.sendMessage(chatId, "안녕하세요!");
+    // } else if( message.indexOf('일정') > -1 || message.indexOf('스케쥴') > -1 ) {
+    //   sendSchedule(chatId);     
+    // }
   }
 });
 
