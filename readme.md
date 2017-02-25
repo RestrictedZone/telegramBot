@@ -37,3 +37,11 @@ tesseract는 영어 인식을 잘하는 편이지만 한국어 인식이 좋지 
 그 다음 아래의 명령어를 통해 프로그램이 실행 됩니다.
 
     npm start
+    
+혹시 node.js의 실행 명령어가 `nodejs`인 경우 package.json의 명령어를 바꾸거나, `nodejs server` 혹은 `nodejs server.js`로 실행하면 된다.
+    
+### (optional) pm2를 사용하는 유저들 중 node.js 실행 명령어가 nodejs인 경우.
+다음 명령어로 실행하면 된다. pm2의 ecosystem을 검색하여 찾아봐도 된다.
+
+    pm2 start ecosystem.config.js 
+ 
