@@ -49,7 +49,7 @@ var seperateExtractedTextByimageFilename = function(extractedText, imageFilename
 
     switch(imageFilename){
       case 'date.png':
-        recentSchedule.date = resultTextLines[0].slice(4, 17);
+        recentSchedule.date = resultTextLines[0].slice(4, 17).replace('초', '3');
         break;
       case 'place.png':
         recentSchedule.place = resultTextLines[0].slice(8, 12).replace('8', 'B');
@@ -142,6 +142,9 @@ var sendSchedule = function(chatId){
 
 bot.onText(/\/schedule/, function(msg, match) {
   console.log(moment().format('ll') + " " + msg.chat.first_name + ' ' + msg.chat.last_name + "님이 스케쥴을 요청하셨습니다.");
+  console.log( recentSchedule.scheduleMessage() );
+  console.log( recentSchedule.eventICSString() );
+  console.log( recentSchedule.eventLinkToGoogle() );
   sendSchedule(msg.chat.id);
 });
 
