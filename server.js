@@ -49,10 +49,11 @@ var seperateExtractedTextByimageFilename = function(extractedText, imageFilename
 
     switch(imageFilename){
       case 'date.png':
-        recentSchedule.date = resultTextLines[0].slice(4, 17).replace('초', '3');
+        recentSchedule.date = resultTextLines[0].slice(4, 17).replace('초', '3').replace('이','1');
         break;
       case 'place.png':
-        recentSchedule.place = resultTextLines[0].slice(8, 12).replace('8', 'B');
+        var str = resultTextLines[0]
+        recentSchedule.place = str.slice(str.length-4, str.length).replace('8', 'B');
         break;
       case 'timestamp1.png':
         if(resultTextLines[0].indexOf("개발제한구역") > 0){
@@ -141,11 +142,13 @@ var sendSchedule = function(chatId){
 };
 
 bot.onText(/\/schedule/, function(msg, match) {
-  console.log(moment().format('ll') + " " + msg.chat.first_name + ' ' + msg.chat.last_name + "님이 스케쥴을 요청하셨습니다.");
-  console.log( recentSchedule.scheduleMessage() );
-  console.log( recentSchedule.eventICSString() );
-  console.log( recentSchedule.eventLinkToGoogle() );
-  sendSchedule(msg.chat.id);
+  if(msg.chat.id === -155796528 || msg.chat.id === 17273224){ // -155796528 == group chat room, 17273224 == nGenius
+    console.log(moment().format('ll') + " " + msg.chat.first_name + ' ' + msg.chat.last_name + "님이 스케쥴을 요청하셨습니다.");
+    console.log( recentSchedule.scheduleMessage() );
+    console.log( recentSchedule.eventICSString() );
+    console.log( recentSchedule.eventLinkToGoogle() );
+    sendSchedule(msg.chat.id);   
+  }
 });
 
 bot.onText(/\/attend/, function(msg, match) {
