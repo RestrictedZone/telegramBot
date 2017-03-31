@@ -108,11 +108,11 @@ var extractTextFromImage = function (file_id, chatId) {
 };
 
 var registerSchedule = function(chatId){
-
+  
   if(fs.existsSync(TARGETIMAGE)){
     // initialization recentSchedule data
     recentSchedule.initData();
-
+    attendList = JSON.parse(fs.readFileSync(ATTENDFILEPATH, 'utf8'))
     // date info
     image.crop(TARGETIMAGE, IMAGELOOT + '/date.png', 450, 85, 100, 130, findTextInImage, chatId);
     // place info
