@@ -146,7 +146,7 @@ var sendSchedule = function(chatId){
 
 };
 
-bot.onText(/^\/schedule$/, function(msg, match) {
+bot.onText(/\/schedule/, function(msg, match) {
   if(msg.chat.id === -155796528 || msg.chat.id === 17273224){ // -155796528 == group chat room, 17273224 == nGenius
     console.log(moment().format('ll') + " " + msg.chat.first_name + ' ' + msg.chat.last_name + "님이 스케쥴을 요청하셨습니다.");
     console.log( recentSchedule.scheduleMessage() );
@@ -156,7 +156,7 @@ bot.onText(/^\/schedule$/, function(msg, match) {
   }
 });
 
-bot.onText(/^\/joinlist$/, function(msg, match) {
+bot.onText(/\/joinlist/, function(msg, match) {
   console.log('attlist')  
   if (attendList.date === "" || (attendList.attend.length === 0 && attendList.absent.length === 0) ) {
     bot.sendMessage(msg.chat.id, attendList.message);
@@ -170,7 +170,7 @@ var setAttendListMessage = function (chatId) {
   bot.sendMessage(chatId, attendList.message);
 }
 
-bot.onText(/^\/attend$/, function(msg, match) {
+bot.onText(/\/attend/, function(msg, match) {
   var name = msg.from.first_name + ' ' + msg.from.last_name;
   var att = attendList.attend;
   // console.log(msg)
@@ -187,7 +187,7 @@ bot.onText(/^\/attend$/, function(msg, match) {
   setAttendListMessage(msg.chat.id);
 });
 
-bot.onText(/^\/absent$/, function(msg, match) {
+bot.onText(/\/absent/, function(msg, match) {
   var name = msg.from.first_name + ' ' + msg.from.last_name;
   var att = attendList.attend;
   var abs = attendList.absent;
