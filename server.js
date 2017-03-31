@@ -162,17 +162,18 @@ bot.onText(/^\/joinlist$/, function(msg, match) {
     bot.sendMessage(msg.chat.id, attendList.message);
     return;
   }
-  addAttendListMessage();
+  setAttendListMessage(msg.chat.id);
 });
 
-var addAttendListMessage = function (chatId) {
+var setAttendListMessage = function (chatId) {
   attendList.message = attendList.date + " 스터디 참석 정보입니다.\n참석: " + attendList.attend.toString() + "\n불참: " +  attendList.absent.toString();
   bot.sendMessage(chatId, attendList.message);
 }
 
 bot.onText(/^\/attend$/, function(msg, match) {
-  var name = msg.chat.first_name + ' ' + msg.chat.last_name;
+  var name = msg.from.first_name + ' ' + msg.from.last_name;
   var att = attendList.attend;
+  // console.log(msg)
   var abs = attendList.absent;
   console.log('attend', name, attendList, att.indexOf(name) === -1, abs.indexOf(name) !== -1)
   if(att.indexOf(name) === -1){
@@ -182,14 +183,15 @@ bot.onText(/^\/attend$/, function(msg, match) {
     abs.splice(abs.indexOf(name), 1)
   }
   console.log(att, abs)
-  bot.sendMessage(msg.chat.id, name+"님께서 "+recentSchedule.date+" 모임 참석의사를 표현하셨습니다.");
-  addAttendListMessage(msg.chat.id);
+  // bot.sendMessage(msg.chat.id, name+"님께서 "+recentSchedule.date+" 모임 참석의사를 표현하셨습니다.");
+  setAttendListMessage(msg.chat.id);
 });
 
 bot.onText(/^\/absent$/, function(msg, match) {
-  var name = msg.chat.first_name + ' ' + msg.chat.last_name;
+  var name = msg.from.first_name + ' ' + msg.from.last_name;
   var att = attendList.attend;
   var abs = attendList.absent;
+  // console.log(msg)
   console.log('absent', name, attendList, abs.indexOf(name) === -1, att.indexOf(name) !== -1)
   if(abs.indexOf(name) === -1){
     abs.push(name)
@@ -198,8 +200,8 @@ bot.onText(/^\/absent$/, function(msg, match) {
     att.splice(att.indexOf(name), 1)
   }
   console.log(att, abs)
-  bot.sendMessage(msg.chat.id, name+"님께서 "+recentSchedule.date+" 모임 불참의사를 표현하셨습니다.");
-  addAttendListMessage(msg.chat.id);
+  // bot.sendMessage(msg.chat.id, name+"님께서 "+recentSchedule.date+" 모임 불참의사를 표현하셨습니다.");
+  setAttendListMessage(msg.chat.id);
 });
 
 // Listen for any kind of message. There are different kinds of messages.
