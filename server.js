@@ -15,6 +15,10 @@ moment.locale();
 
 const IMAGELOOT = 'images';
 const TARGETIMAGE = 'images/recent.png';
+const ATTENDFILEPATH = 'data/attend.json';
+
+// for attend info data
+var attendList = JSON.parse(fs.readFileSync(ATTENDFILEPATH, 'utf8'))
 
 // ocr by tesseract
 var findTextInImage = function(imagePath, chatId, language) {
@@ -50,6 +54,7 @@ var seperateExtractedTextByimageFilename = function(extractedText, imageFilename
     switch(imageFilename){
       case 'date.png':
         recentSchedule.date = resultTextLines[0].slice(4, 17).replace('초', '3').replace('이','1');
+        attendList.date = recentSchedule.date;
         break;
       case 'place.png':
         var str = resultTextLines[0]
@@ -141,7 +146,7 @@ var sendSchedule = function(chatId){
 
 };
 
-bot.onText(/\/schedule/, function(msg, match) {
+bot.onText(/^\/schedule$/, function(msg, match) {
   if(msg.chat.id === -155796528 || msg.chat.id === 17273224){ // -155796528 == group chat room, 17273224 == nGenius
     console.log(moment().format('ll') + " " + msg.chat.first_name + ' ' + msg.chat.last_name + "님이 스케쥴을 요청하셨습니다.");
     console.log( recentSchedule.scheduleMessage() );
@@ -151,12 +156,50 @@ bot.onText(/\/schedule/, function(msg, match) {
   }
 });
 
-bot.onText(/\/attend/, function(msg, match) {
-  bot.sendMessage(msg.chat.id, msg.chat.first_name + ' ' + msg.chat.last_name+"님께서 "+recentSchedule.date+" 모임 참석의사를 표현하셨습니다.");
+bot.onText(/^\/joinlist$/, function(msg, match) {
+  console.log('attlist')  
+  if (attendList.date === "" || (attendList.attend.length === 0 && attendList.absent.length === 0) ) {
+    bot.sendMessage(msg.chat.id, attendList.message);
+    return;
+  }
+  addAttendListMessage();
 });
 
-bot.onText(/\/absent/, function(msg, match) {
-  bot.sendMessage(msg.chat.id, msg.chat.first_name + ' ' + msg.chat.last_name+"님께서 "+recentSchedule.date+" 모임 불참의사를 표현하셨습니다.");
+var addAttendListMessage = function (chatId) {
+  attendList.message = attendList.date + " 스터디 참석 정보입니다.\n참석: " + attendList.attend.toString() + "\n불참: " +  attendList.absent.toString();
+  bot.sendMessage(chatId, attendList.message);
+}
+
+bot.onText(/^\/attend$/, function(msg, match) {
+  var name = msg.chat.first_name + ' ' + msg.chat.last_name;
+  var att = attendList.attend;
+  var abs = attendList.absent;
+  console.log('attend', name, attendList, att.indexOf(name) === -1, abs.indexOf(name) !== -1)
+  if(att.indexOf(name) === -1){
+    att.push(name)
+  }
+  if(abs.indexOf(name) !== -1){
+    abs.splice(abs.indexOf(name), 1)
+  }
+  console.log(att, abs)
+  bot.sendMessage(msg.chat.id, name+"님께서 "+recentSchedule.date+" 모임 참석의사를 표현하셨습니다.");
+  addAttendListMessage(msg.chat.id);
+});
+
+bot.onText(/^\/absent$/, function(msg, match) {
+  var name = msg.chat.first_name + ' ' + msg.chat.last_name;
+  var att = attendList.attend;
+  var abs = attendList.absent;
+  console.log('absent', name, attendList, abs.indexOf(name) === -1, att.indexOf(name) !== -1)
+  if(abs.indexOf(name) === -1){
+    abs.push(name)
+  }
+  if(att.indexOf(name) !== -1){
+    att.splice(att.indexOf(name), 1)
+  }
+  console.log(att, abs)
+  bot.sendMessage(msg.chat.id, name+"님께서 "+recentSchedule.date+" 모임 불참의사를 표현하셨습니다.");
+  addAttendListMessage(msg.chat.id);
 });
 
 // Listen for any kind of message. There are different kinds of messages.
