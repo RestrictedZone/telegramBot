@@ -171,7 +171,10 @@ var setAttendListMessage = function (chatId) {
 }
 
 bot.onText(/\/attend/, function(msg, match) {
-  var name = msg.from.first_name + ' ' + msg.from.last_name;
+  var name = msg.from.first_name;
+  if (msg.from.last_name !== undefined){
+    name = named + ' ' + msg.from.last_name;
+  }
   var att = attendList.attend;
   // console.log(msg)
   var abs = attendList.absent;
@@ -188,7 +191,10 @@ bot.onText(/\/attend/, function(msg, match) {
 });
 
 bot.onText(/\/absent/, function(msg, match) {
-  var name = msg.from.first_name + ' ' + msg.from.last_name;
+  var name = msg.from.first_name;
+  if (msg.from.last_name !== undefined){
+    name = named + ' ' + msg.from.last_name;
+  }
   var att = attendList.attend;
   var abs = attendList.absent;
   // console.log(msg)
