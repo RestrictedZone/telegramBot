@@ -17,10 +17,14 @@ const IMAGELOOT = 'images';
 const TARGETIMAGE = 'images/recent.png';
 const ATTENDFILEPATH = 'data/attend.json';
 
+const adminAccountID = 17273224;
 
 // System Messages
 const systemMessageBotStart = function () {
-  bot.sendMessage(17273224, "개발제한구역 관리자가 시작/재시작 되었습니다.");
+  bot.sendMessage(adminAccountID, "개발제한구역 관리자가 시작/재시작 되었습니다.");
+}
+const systemMessageBotSettingComplete = function () {
+  bot.sendMessage(adminAccountID, "개발제한구역 관리자가 서비스 준비를 마쳤습니다.");
 }
 const systemMessageUnknownError = function (chatID) {
   bot.sendMessage(chatID, "알수 없는 애러가 발생했습니다. 관리자가 수정할 때 까지 요청을 자제해주세요.");
@@ -50,7 +54,8 @@ var findTextInImage = function(imagePath, chatId, language) {
 
     seperateExtractedTextByimageFilename(resultText, imagePath.split('/')[1]);
     if( recentSchedule.extractTextCount > 3 ){
-      recentSchedule.extractTextCount = 0;  
+      recentSchedule.extractTextCount = 0;
+      systemMessageBotSettingComplete()
       if(chatId){
         sendSchedule(chatId);
       }
@@ -180,7 +185,7 @@ var sendSchedule = function(chatId){
 };
 
 bot.onText(/\/schedule/, function(msg, match) {
-  if(msg.chat.id === -155796528 || msg.chat.id === 17273224){ // -155796528 == group chat room, 17273224 == nGenius
+  if(msg.chat.id === -155796528 || msg.chat.id === adminAccountID){ // -155796528 == group chat room
     try {
         console.log(moment().format('ll') + " " + msg.chat.first_name + ' ' + msg.chat.last_name + "님이 스케쥴을 요청하셨습니다.");
         console.log( JSON.stringify(recentSchedule.getData()) );
@@ -196,7 +201,7 @@ bot.onText(/\/schedule/, function(msg, match) {
 });
 
 bot.onText(/\/joinlist/, function(msg, match) {
-  if(msg.chat.id === -155796528 || msg.chat.id === 17273224){ // -155796528 == group chat room, 17273224 == nGenius
+  if(msg.chat.id === -155796528 || msg.chat.id === adminAccountID){ // -155796528 == group chat room
     try {
       console.log('attlist')  
       if (attendList.date === "" || (attendList.attend.length === 0 && attendList.absent.length === 0) ) {
@@ -217,7 +222,7 @@ var setAttendListMessage = function (chatId) {
 }
 
 bot.onText(/\/attend/, function(msg, match) {
-  if(msg.chat.id === -155796528 || msg.chat.id === 17273224){ // -155796528 == group chat room, 17273224 == nGenius
+  if(msg.chat.id === -155796528 || msg.chat.id === adminAccountID){ // -155796528 == group chat room
     try {
       var name = msg.from.first_name + ' ' + msg.from.last_name;
       var att = attendList.attend;
@@ -241,7 +246,7 @@ bot.onText(/\/attend/, function(msg, match) {
 });
 
 bot.onText(/\/absent/, function(msg, match) {
-  if(msg.chat.id === -155796528 || msg.chat.id === 17273224){ // -155796528 == group chat room, 17273224 == nGenius
+  if(msg.chat.id === -155796528 || msg.chat.id === adminAccountID){ // -155796528 == group chat room
     try {
       var name = msg.from.first_name + ' ' + msg.from.last_name;
       var att = attendList.attend;
@@ -266,7 +271,7 @@ bot.onText(/\/absent/, function(msg, match) {
 
 // Listen for any kind of message. There are different kinds of messages.
 bot.on('message', function (msg) {
-  if(msg.chat.id === -155796528 || msg.chat.id === 17273224){ // -155796528 == group chat room, 17273224 == nGenius
+  if(msg.chat.id === -155796528 || msg.chat.id === adminAccountID){ // -155796528 == group chat room
     try {
       var chatId = msg.chat.id
           message = msg.text;
