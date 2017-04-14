@@ -19,7 +19,7 @@ const ATTENDFILEPATH = 'data/attend.json';
 
 // chatID List
 const adminAccountID = 17273224;
-const groupChatID = groupChatID;
+const groupChatID = -155796528;
 
 // System Messages
 const systemMessageBotStart = function () {
