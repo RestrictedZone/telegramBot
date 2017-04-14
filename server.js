@@ -173,7 +173,7 @@ var registerSchedule = function(chatId){
     // initialization recentSchedule data
     recentSchedule.initData();
     attendList = JSON.parse(fs.readFileSync(ATTENDDEFAULTFILEPATH, 'utf8'))
-    if(fs.existsSync(ATTENDFILEPATH)){   
+    if(chatId !== undefined && fs.existsSync(ATTENDFILEPATH)){   
       fs.unlinkSync(ATTENDFILEPATH)
     }
     // date info
