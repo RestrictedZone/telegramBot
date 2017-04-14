@@ -17,7 +17,9 @@ const IMAGELOOT = 'images';
 const TARGETIMAGE = 'images/recent.png';
 const ATTENDFILEPATH = 'data/attend.json';
 
+// chatID List
 const adminAccountID = 17273224;
+const groupChatID = groupChatID;
 
 // System Messages
 const systemMessageBotStart = function () {
@@ -35,6 +37,12 @@ const systemMessageCheckImage = function (chatID) {
 const systemMessageIncorrectImage = function (chatID) {
   bot.sendMessage(chatID, "맞지 않는 이미지를 주셨습니다. 이미지를 확인하시고 다시 보내주세요.");
 }
+const setAttendListMessage = function (chatId) {
+  attendList.message = attendList.date + " 스터디 참석 정보입니다.\n참석: " + attendList.attend.toString() + "\n불참: " +  attendList.absent.toString();
+  bot.sendMessage(chatId, attendList.message);
+}
+
+
 // for attend info data
 var attendList = JSON.parse(fs.readFileSync(ATTENDFILEPATH, 'utf8'))
 
@@ -185,7 +193,7 @@ var sendSchedule = function(chatId){
 };
 
 bot.onText(/\/schedule/, function(msg, match) {
-  if(msg.chat.id === -155796528 || msg.chat.id === adminAccountID){ // -155796528 == group chat room
+  if(msg.chat.id === groupChatID || msg.chat.id === adminAccountID){
     try {
         console.log(moment().format('ll') + " " + msg.chat.first_name + ' ' + msg.chat.last_name + "님이 스케쥴을 요청하셨습니다.");
         console.log( JSON.stringify(recentSchedule.getData()) );
@@ -201,7 +209,7 @@ bot.onText(/\/schedule/, function(msg, match) {
 });
 
 bot.onText(/\/joinlist/, function(msg, match) {
-  if(msg.chat.id === -155796528 || msg.chat.id === adminAccountID){ // -155796528 == group chat room
+  if(msg.chat.id === groupChatID || msg.chat.id === adminAccountID){
     try {
       console.log('attlist')  
       if (attendList.date === "" || (attendList.attend.length === 0 && attendList.absent.length === 0) ) {
@@ -216,15 +224,14 @@ bot.onText(/\/joinlist/, function(msg, match) {
   }
 });
 
-var setAttendListMessage = function (chatId) {
-  attendList.message = attendList.date + " 스터디 참석 정보입니다.\n참석: " + attendList.attend.toString() + "\n불참: " +  attendList.absent.toString();
-  bot.sendMessage(chatId, attendList.message);
-}
-
 bot.onText(/\/attend/, function(msg, match) {
-  if(msg.chat.id === -155796528 || msg.chat.id === adminAccountID){ // -155796528 == group chat room
+  if(msg.chat.id === groupChatID || msg.chat.id === adminAccountID){
     try {
-      var name = msg.from.first_name + ' ' + msg.from.last_name;
+      var name = msg.from.first_name;
+      if (msg.from.last_name !== undefined){
+        name = name + ' ' + msg.from.last_name;
+      }
+
       var att = attendList.attend;
       // console.log(msg)
       var abs = attendList.absent;
@@ -235,7 +242,7 @@ bot.onText(/\/attend/, function(msg, match) {
       if(abs.indexOf(name) !== -1){
         abs.splice(abs.indexOf(name), 1)
       }
-      console.log(att, abs)
+      // console.log(att, abs)
       // bot.sendMessage(msg.chat.id, name+"님께서 "+recentSchedule.date+" 모임 참석의사를 표현하셨습니다.");
       setAttendListMessage(msg.chat.id);
     } catch (error) {
@@ -246,9 +253,12 @@ bot.onText(/\/attend/, function(msg, match) {
 });
 
 bot.onText(/\/absent/, function(msg, match) {
-  if(msg.chat.id === -155796528 || msg.chat.id === adminAccountID){ // -155796528 == group chat room
+  if(msg.chat.id === groupChatID || msg.chat.id === adminAccountID){
     try {
-      var name = msg.from.first_name + ' ' + msg.from.last_name;
+      var name = msg.from.first_name;
+      if (msg.from.last_name !== undefined){
+        name = name + ' ' + msg.from.last_name;
+      }
       var att = attendList.attend;
       var abs = attendList.absent;
       // console.log(msg)
@@ -259,7 +269,7 @@ bot.onText(/\/absent/, function(msg, match) {
       if(att.indexOf(name) !== -1){
         att.splice(att.indexOf(name), 1)
       }
-      console.log(att, abs)
+      // console.log(att, abs)
       // bot.sendMessage(msg.chat.id, name+"님께서 "+recentSchedule.date+" 모임 불참의사를 표현하셨습니다.");
       setAttendListMessage(msg.chat.id);
     } catch (error) {
@@ -271,10 +281,10 @@ bot.onText(/\/absent/, function(msg, match) {
 
 // Listen for any kind of message. There are different kinds of messages.
 bot.on('message', function (msg) {
-  if(msg.chat.id === -155796528 || msg.chat.id === adminAccountID){ // -155796528 == group chat room
+  if(msg.chat.id === groupChatID || msg.chat.id === adminAccountID){
     try {
-      var chatId = msg.chat.id
-          message = msg.text;
+      var chatId = msg.chat.id;
+      var message = msg.text;
       // console.log("from on: ", msg);
       if (msg.document) {
         extractTextFromImage(msg.document.file_id, chatId);
