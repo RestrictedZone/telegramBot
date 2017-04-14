@@ -1,10 +1,1 @@
-{
-    "date": "",
-    "message": "아직 등록된 정보가 없습니다.",
-    "attend": [
-
-    ],
-    "absent": [
-        
-    ]
-}
+{"date":"2017년4월15일","message":"2017년4월15일 스터디 참석 정보입니다.\n참석: \n불참: Sukmin Lim","attend":[],"absent":["Sukmin Lim"]}

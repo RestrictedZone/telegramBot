@@ -13,13 +13,23 @@ var config = require('./config'),
   
 moment.locale();
 
+// CONST list
 const IMAGELOOT = 'images';
 const TARGETIMAGE = 'images/recent.png';
 const ATTENDFILEPATH = 'data/attend.json';
+const ATTENDDEFAULTFILEPATH = 'data/attend_default.json';
 
 // chatID List
-const adminAccountID = 17273224;
-const groupChatID = -155796528;
+const adminAccountID = 17273224; // nGenius
+const groupChatID = -155796528; // Restricted Dev Zone
+
+var attendList
+// for attend info data
+if(fs.existsSync(ATTENDFILEPATH)){
+  attendList = JSON.parse(fs.readFileSync(ATTENDFILEPATH, 'utf8'))
+} else {
+  attendList = JSON.parse(fs.readFileSync(ATTENDDEFAULTFILEPATH, 'utf8'))
+}
 
 // System Messages
 const systemMessageBotStart = function () {
@@ -42,9 +52,13 @@ const setAttendListMessage = function (chatId) {
   bot.sendMessage(chatId, attendList.message);
 }
 
-
-// for attend info data
-var attendList = JSON.parse(fs.readFileSync(ATTENDFILEPATH, 'utf8'))
+// util functions
+const saveAttendList = function () {
+  fs.writeFile(ATTENDFILEPATH, JSON.stringify(attendList), (err) => {
+    if (err) throw err;
+    console.log('The file has been saved!');
+  });
+}
 
 // ocr by tesseract
 var findTextInImage = function(imagePath, chatId, language) {
@@ -158,7 +172,10 @@ var registerSchedule = function(chatId){
   if(fs.existsSync(TARGETIMAGE)){
     // initialization recentSchedule data
     recentSchedule.initData();
-    attendList = JSON.parse(fs.readFileSync(ATTENDFILEPATH, 'utf8'))
+    attendList = JSON.parse(fs.readFileSync(ATTENDDEFAULTFILEPATH, 'utf8'))
+    if(fs.existsSync(ATTENDFILEPATH)){   
+      fs.unlinkSync(ATTENDFILEPATH)
+    }
     // date info
     image.crop(TARGETIMAGE, IMAGELOOT + '/date.png', 450, 85, 100, 130, findTextInImage, chatId);
     // place info
@@ -245,6 +262,7 @@ bot.onText(/\/attend/, function(msg, match) {
       // console.log(att, abs)
       // bot.sendMessage(msg.chat.id, name+"님께서 "+recentSchedule.date+" 모임 참석의사를 표현하셨습니다.");
       setAttendListMessage(msg.chat.id);
+      saveAttendList();      
     } catch (error) {
       console.warn(error)
       printMessageUnknownError(msg.chat.id)
@@ -272,6 +290,7 @@ bot.onText(/\/absent/, function(msg, match) {
       // console.log(att, abs)
       // bot.sendMessage(msg.chat.id, name+"님께서 "+recentSchedule.date+" 모임 불참의사를 표현하셨습니다.");
       setAttendListMessage(msg.chat.id);
+      saveAttendList();      
     } catch (error) {
       console.warn(error)
       printMessageUnknownError(msg.chat.id)
