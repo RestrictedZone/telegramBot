@@ -176,7 +176,6 @@ var registerSchedule = function(chatId){
     if(fs.existsSync(ATTENDFILEPATH)){   
       fs.unlinkSync(ATTENDFILEPATH)
     }
-    fs.unlinkSync(ATTENDFILEPATH)
     // date info
     image.crop(TARGETIMAGE, IMAGELOOT + '/date.png', 450, 85, 100, 130, findTextInImage, chatId);
     // place info
