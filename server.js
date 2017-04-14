@@ -172,10 +172,14 @@ var registerSchedule = function(chatId){
   if(fs.existsSync(TARGETIMAGE)){
     // initialization recentSchedule data
     recentSchedule.initData();
-    attendList = JSON.parse(fs.readFileSync(ATTENDDEFAULTFILEPATH, 'utf8'))
-    if(chatId !== undefined && fs.existsSync(ATTENDFILEPATH)){   
+    if(chatId !== undefined && fs.existsSync(ATTENDFILEPATH)){ 
+      // init process  
       fs.unlinkSync(ATTENDFILEPATH)
     }
+    if (chatId !== undefined) {
+      attendList = JSON.parse(fs.readFileSync(ATTENDDEFAULTFILEPATH, 'utf8'))      
+    } 
+    
     // date info
     image.crop(TARGETIMAGE, IMAGELOOT + '/date.png', 450, 85, 100, 130, findTextInImage, chatId);
     // place info
