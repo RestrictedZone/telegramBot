@@ -45,7 +45,7 @@ const systemMessageCheckImage = function (chatID) {
   bot.sendMessage(chatID, "이미지 확인 중 입니다. 잠시만 기다려주세요.");
 }
 const systemMessageIncorrectImage = function (chatID) {
-  bot.sendMessage(chatID, "맞지 않는 이미지를 주셨습니다. 이미지를 확인하시고 다시 보내주세요.");
+  bot.sendMessage(chatID, "일정 정보 이미지가 아닙니다. 이미지를 확인하시고 다시 보내주세요.");
 }
 const setAttendListMessage = function (chatId) {
   attendList.message = attendList.date + " 스터디 참석 정보입니다.\n참석: " + attendList.attend.toString() + "\n불참: " +  attendList.absent.toString();
