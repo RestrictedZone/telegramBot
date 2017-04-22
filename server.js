@@ -20,8 +20,8 @@ const ATTENDFILEPATH = 'data/attend.json'
 const ATTENDDEFAULTFILEPATH = 'data/attend_default.json'
 
 // chatID List
-const adminAccountID = 17273224 // nGenius
-const groupChatID = -155796528 // Restricted Dev Zone
+const adminAccountID = config.adminAccountID
+const groupChatID = config.groupChatID
 
 var attendList
 // for attend info data
