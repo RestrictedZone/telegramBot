@@ -30,9 +30,12 @@ tesseract는 영어 인식을 잘하는 편이지만 한국어 인식이 좋지 
 
 ## 실행 시키는 방법
 
-우선 텔래그램 botfather에게 받은 api 토큰 값을 적용시키기 위에 아래의 명령어를 입력한 후 `config/index.sample.js`에 token값을 입력합니다.
+우선 `config/index.js`를 만들기 위해 아래의 명령어를 입력합니다.
 
     sudo mv config/index.sample.js config/index.js
+
+아래의 명령어를 입력한 후 `config/index.js`에서 `token`, `adminAccountID`, `groupChatID`의 값을 입력합니다.
+각각, 텔래그램 botfather에게 받은 api 토큰 값과 봇을 관리할 사람의 chat id(숫자), 봇이 투입될 그룹방의 chat id(숫자)입니다. 각각의 chat id를 얻는 방법은 [링크(stackoverflow)](http://stackoverflow.com/questions/32423837/telegram-bot-how-to-get-a-group-chat-id-ruby-gem-telegram-bot)에서 확인하시면 됩니다.
 
 그 다음 아래의 명령어를 통해 프로그램이 실행 됩니다.
 
