@@ -19,6 +19,10 @@ const TARGETIMAGE = 'images/recent.png'
 const ATTENDFILEPATH = 'data/attend.json'
 const ATTENDDEFAULTFILEPATH = 'data/attend_default.json'
 
+// pytalk package
+const pytalk = require('pytalk');
+const threshold = pytalk.worker('visioning.py').method('threshold');
+
 // chatID List
 const adminAccountID = config.adminAccountID
 const groupChatID = config.groupChatID
@@ -92,52 +96,30 @@ var findTextInImage = function(imagePath, chatId, language) {
 
 var seperateExtractedTextByimageFilename = function(extractedText, imageFilename){
     var resultTextLines = extractedText.split('\n')
-    var firstLine = resultTextLines[0]
-    var secondLine = resultTextLines[1]
 
-    switch(imageFilename){
-      case 'date.png':
-        recentSchedule.date = firstLine.slice(firstLine.length - 10, firstLine.length).replace('초', '3').replace('이','1')
-        attendList.date = recentSchedule.date
-        break
-      case 'place.png':
-        recentSchedule.place = firstLine.slice(firstLine.length-4, firstLine.length).replace('8', 'B')
-        break
-      case 'timestamp1.png':
-        if(firstLine.indexOf("개발제한구역") > 0){
-          recentSchedule.timeStart = firstLine.slice(2, 4).trim().replace('묘빼', '12')
-          recentSchedule.timeEnd = secondLine.slice(2, 4).trim()
-          recentSchedule.timeStart = parseInt( recentSchedule.timeStart )
-          recentSchedule.timeEnd = parseInt( recentSchedule.timeEnd ) + 12
-          if(recentSchedule.timeStart !== 12){
+    // import visioning.py
+    if(imageFilename === 'filtered.png') {
+      resultTextLines.forEach(function(i) {
+        if (i.indexOf('개발제한구역') > 0) {
+          recentSchedule.timeStart = parseInt(i.slice(2, 4).replace('O', 0))
+          if (recentSchedule.timeStart !== 12) {
             recentSchedule.timeStart += 12
           }
         }
-        break
-      case 'timestamp2.png':
-        if(firstLine.indexOf("개발제한구역") > 0){
-          recentSchedule.timeStart = firstLine.slice(2, 4).trim().replace('묘빼', '12')
-          recentSchedule.timeEnd = secondLine.slice(2, 4).trim()
-          recentSchedule.timeStart = parseInt( recentSchedule.timeStart )
-          recentSchedule.timeEnd = parseInt( recentSchedule.timeEnd ) + 12
-          if(recentSchedule.timeStart !== 12){
-            recentSchedule.timeStart += 12
-          }
+        if (i.indexOf('스터디') > 0) {
+          recentSchedule.timeEnd = parseInt(i.slice(2, 4).replace('O', 0)) + 12
         }
-        break
-      case 'timestamp3.png':
-        if(firstLine.indexOf("개발제한구역") > 0){
-          recentSchedule.timeStart = firstLine.slice(2, 4).trim().replace('묘빼', '12')
-          recentSchedule.timeEnd = secondLine.slice(2, 4).trim()
-          recentSchedule.timeStart = parseInt( recentSchedule.timeStart )
-          recentSchedule.timeEnd = parseInt( recentSchedule.timeEnd ) + 12
-          if(recentSchedule.timeStart !== 12){
-            recentSchedule.timeStart += 12
-          }
+        if (i.indexOf('예약하기') > 0) {
+          var dateplaceidx = i.search('M')
+          var endidx = i.search('예')
+          recentSchedule.date = i.slice(0, dateplaceidx).replace('O', 0);
+          attendList.date = recentSchedule.date;
+          recentSchedule.place = i.slice(dateplaceidx, endidx).replace('O', 0);
         }
-        break
+      })
     }
 }
+
 
 var extractTextFromImage = function (file_id, chatId) {
 
@@ -156,7 +138,16 @@ var extractTextFromImage = function (file_id, chatId) {
 
       if(isTargetImage){
         fs.renameSync(downloadedFilepath, TARGETIMAGE)
-        registerSchedule(chatId)
+
+    		// filtered image
+				// TODO:add FILTERIMAGE filesync
+    		threshold(TARGETIMAGE, (err, filtered) => {
+      		const FILTERIMAGE = `${filtered}`
+					fs.readFileSync(FILTERIMAGE, 'utf8')
+      		findTextInImage(FILTERIMAGE, chatId, 'kor')
+					registerSchedule(chatId)
+    		})
+
       } else {
         console.log('This image is not TARGET image!')
         systemMessageIncorrectImage(chatId)
@@ -178,16 +169,8 @@ var registerSchedule = function(chatId){
     }
     if (chatId !== undefined) {
       attendList = JSON.parse(fs.readFileSync(ATTENDDEFAULTFILEPATH, 'utf8'))      
-    } 
-    
-    // date info
-    image.crop(TARGETIMAGE, IMAGELOOT + '/date.png', 450, 85, 100, 130, findTextInImage, chatId)
-    // place info
-    image.crop(TARGETIMAGE, IMAGELOOT + '/place.png', 450, 85, 100, 215, findTextInImage, chatId, "eng")
-    // timestamp info
-    image.crop(TARGETIMAGE, IMAGELOOT + '/timestamp1.png', 600, 80, 20, 780, findTextInImage, chatId)
-    image.crop(TARGETIMAGE, IMAGELOOT + '/timestamp2.png', 600, 80, 20, 860, findTextInImage, chatId)
-    image.crop(TARGETIMAGE, IMAGELOOT + '/timestamp3.png', 600, 80, 20, 940, findTextInImage, chatId)  
+    }
+
   } else {
     console.log(TARGETIMAGE + " is not exist.")
     if(chatId){
