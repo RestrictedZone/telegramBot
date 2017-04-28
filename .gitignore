@@ -7,3 +7,4 @@ config/index.js
 test/*
 npm-debug.log
 .vscode/
+opencv/
