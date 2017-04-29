@@ -134,16 +134,7 @@ var extractTextFromImage = function (file_id, chatId) {
       if(isTargetImage){
         fs.renameSync(downloadedFilepath, TARGETIMAGE)
 
-    		// filtered image
-				// TODO:add FILTERIMAGE filesync
-        var python = spawn('python', ['visioning.py'])
-        python.stdout.on('data', function(data) {
-          const FILTERIMAGE = data.toString().trim()
-          fs.readFileSync(FILTERIMAGE, 'utf8')
-          findTextInImage(FILTERIMAGE, chatId, 'kor')
-          fs.unlinkSync(FILTERIMAGE)
-          registerSchedule(chatId)
-        })
+        registerSchedule(chatId)
 
       } else {
         console.log('This image is not TARGET image!')
@@ -166,6 +157,14 @@ var registerSchedule = function(chatId){
     }
     if (chatId !== undefined) {
       attendList = JSON.parse(fs.readFileSync(ATTENDDEFAULTFILEPATH, 'utf8'))      
+        var python = spawn('python', ['visioning.py'])
+        python.stdout.on('data', function(data) {
+          const FILTERIMAGE = data.toString().trim()
+					fs.chmodSync(FILTERIMAGE, 777)
+          fs.readFileSync(FILTERIMAGE, 'utf8')
+          findTextInImage(FILTERIMAGE, chatId, 'kor')
+          fs.unlinkSync(FILTERIMAGE)
+        })
     }
 
   } else {
@@ -312,6 +311,6 @@ bot.on('message', function (msg) {
 
 // init schedule data
 systemMessageBotStart()
-registerSchedule()
+registerSchedule(groupChatID)
 
 
