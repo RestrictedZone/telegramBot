@@ -3,7 +3,6 @@
 import cv2
 import numpy as np
 
-@pytalk_method('threshold')
 def cv2threshold(path):
     img = cv2.imread(path)
     dst = 'images/filtered.png'
@@ -17,7 +16,7 @@ def cv2threshold(path):
     gray_resize = cv2.resize(gray_roi, (2*width, 2*h_crop), interpolation=cv2.INTER_LINEAR)
 
     # denoising
-    denoised = cv2.fastNlMeansDenoising(gray_resize, h=19, searchWindowSize=21, templateWindowSize=7)
+    denoised = cv2.fastNlMeansDenoising(gray_resize, h=10, searchWindowSize=21, templateWindowSize=7)
 
     # image thresholding
     ret, thr = cv2.threshold(gray_resize, 192, 255, cv2.THRESH_BINARY)
@@ -25,4 +24,7 @@ def cv2threshold(path):
 
     # filtered file save & return
     cv2.imwrite(dst, thr)
-    return dst
+    print dst
+
+if __name__ == '__main__':
+	cv2threshold('images/recent.png')

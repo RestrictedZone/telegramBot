@@ -19,9 +19,9 @@ const TARGETIMAGE = 'images/recent.png'
 const ATTENDFILEPATH = 'data/attend.json'
 const ATTENDDEFAULTFILEPATH = 'data/attend_default.json'
 
-// pytalk package
-const pytalk = require('pytalk');
-const threshold = pytalk.worker('visioning.py').method('threshold');
+// python child process
+var spawn = require('child_process').spawn
+
 
 // chatID List
 const adminAccountID = config.adminAccountID
@@ -79,18 +79,13 @@ var findTextInImage = function(imagePath, chatId, language) {
     console.log( '\n----- '+imagePath+' -----\n' + resultText )
 
     seperateExtractedTextByimageFilename(resultText, imagePath.split('/')[1])
-    if( recentSchedule.extractTextCount > 3 ){
-      recentSchedule.extractTextCount = 0
-      systemMessageBotSettingComplete()
-      if(chatId){
-        sendSchedule(chatId)
-      }
-    } else {
-      recentSchedule.extractTextCount++
+    systemMessageBotSettingComplete()
+    if(chatId){
+      sendSchedule(chatId)
     }
   }).finally(function(){
     // delete cropped image
-    fs.unlinkSync(imagePath)
+    //fs.unlinkSync(imagePath)
   })
 }
 
@@ -141,12 +136,14 @@ var extractTextFromImage = function (file_id, chatId) {
 
     		// filtered image
 				// TODO:add FILTERIMAGE filesync
-    		threshold(TARGETIMAGE, (err, filtered) => {
-      		const FILTERIMAGE = `${filtered}`
-					fs.readFileSync(FILTERIMAGE, 'utf8')
-      		findTextInImage(FILTERIMAGE, chatId, 'kor')
-					registerSchedule(chatId)
-    		})
+        var python = spawn('python', ['visioning.py'])
+        python.stdout.on('data', function(data) {
+          const FILTERIMAGE = data.toString().trim()
+          fs.readFileSync(FILTERIMAGE, 'utf8')
+          findTextInImage(FILTERIMAGE, chatId, 'kor')
+          fs.unlinkSync(FILTERIMAGE)
+          registerSchedule(chatId)
+        })
 
       } else {
         console.log('This image is not TARGET image!')
