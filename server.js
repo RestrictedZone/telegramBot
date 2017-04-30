@@ -56,11 +56,36 @@ const setAttendListMessage = function (chatId) {
   bot.sendMessage(chatId, attendList.message)
 }
 
+const sendSchedule = function(chatId){
+  if(recentSchedule.isExisted()){
+    bot.sendMessage(chatId, recentSchedule.scheduleMessage() + "\n\n구글 켈린더 링크입니다. " + recentSchedule.eventLinkToGoogle())
+    // make ics file
+    if(!fs.existsSync("./data/")){
+      console.log("make 'data' directory!")
+      fs.mkdirSync("data")
+    }
+    fs.writeFileSync('data/이번주_개발제한구역일정.ics', recentSchedule.eventICSString())
+    bot.sendDocument(chatId, 'data/이번주_개발제한구역일정.ics')
+  } else {
+    bot.sendMessage(chatId, '등록된 일정이 없습니다. 저장된 일정 정보 불러오기를 시도합니다. 1분 후 다시 시도해주세요. 같은 메시지를 보셨다면 일정 등록을 위한 일정 이미지를 업로드 해주세요.')
+    registerSchedule(chatId) 
+  }
+}
+
+// print log
+const printRecentScheduleObject = function () {
+  console.log( JSON.stringify(recentSchedule.getData()) )
+  console.log( recentSchedule.scheduleMessage() )
+  console.log( recentSchedule.eventLinkToGoogle() )
+  console.log( recentSchedule.eventICSString() )
+}
+
+
 // util functions
 const saveAttendList = function () {
   fs.writeFile(ATTENDFILEPATH, JSON.stringify(attendList), (err) => {
     if (err) throw err
-    console.log('The file has been saved!')
+    console.log('The file' + ATTENDFILEPATH + 'has been saved!')
   })
 }
 
@@ -75,10 +100,33 @@ var findTextInImage = function(imagePath, chatId, language) {
   // .progress(function (p) { console.log('progress', p)  })
   .catch(err => console.error(err))
   .then(function (result) {
-    var resultText = result.text.replace(/ /gi, '')
-    console.log( '\n----- '+imagePath+' -----\n' + resultText )
+    var resultTextLines = result.text.replace(/ /gi, '').split('\n')
+    for (var i in resultTextLines) {
+      // console.log(i, resultTextLines[i])
+      
+      if (resultTextLines[i].indexOf('개발제한구역') > 0) {
+        // console.log('find firstline', resultTextLines[i])
+        var firstLine = resultTextLines[i]
+        var secondLine = resultTextLines[parseInt(i) + 1]
+      }
+      if (resultTextLines[i].indexOf('예약') > 0) {
+        // console.log('find lastLine', resultTextLines[i])
+        var lastLine = resultTextLines[i]
+        // break;
+      }
+    }
+    recentSchedule.timeStart = firstLine.slice(2, 4)
+    recentSchedule.timeEnd = secondLine.slice(2, 4)
+    recentSchedule.timeStart = parseInt( recentSchedule.timeStart )
+    recentSchedule.timeEnd = parseInt( recentSchedule.timeEnd ) + 12
+    if(recentSchedule.timeStart !== 12){
+      recentSchedule.timeStart += 12
+    }
+    recentSchedule.place = lastLine.slice(10, 14)
+    recentSchedule.date = lastLine.slice(0, 10)
+    attendList.date = recentSchedule.date
 
-    seperateExtractedTextByimageFilename(resultText, imagePath.split('/')[1])
+    console.log(firstLine, secondLine, lastLine, recentSchedule)  
     systemMessageBotSettingComplete()
     if(chatId){
       sendSchedule(chatId)
@@ -88,33 +136,6 @@ var findTextInImage = function(imagePath, chatId, language) {
     //fs.unlinkSync(imagePath)
   })
 }
-
-var seperateExtractedTextByimageFilename = function(extractedText, imageFilename){
-    var resultTextLines = extractedText.split('\n')
-
-    // import visioning.py
-    if(imageFilename === 'filtered.png') {
-      resultTextLines.forEach(function(i) {
-        if (i.indexOf('개발제한구역') > 0) {
-          recentSchedule.timeStart = parseInt(i.slice(2, 4).replace('O', 0))
-          if (recentSchedule.timeStart !== 12) {
-            recentSchedule.timeStart += 12
-          }
-        }
-        if (i.indexOf('스터디') > 0) {
-          recentSchedule.timeEnd = parseInt(i.slice(2, 4).replace('O', 0)) + 12
-        }
-        if (i.indexOf('예약하기') > 0) {
-          var dateplaceidx = i.search('M')
-          var endidx = i.search('예')
-          recentSchedule.date = i.slice(0, dateplaceidx).replace('O', 0);
-          attendList.date = recentSchedule.date;
-          recentSchedule.place = i.slice(dateplaceidx, endidx).replace('O', 0);
-        }
-      })
-    }
-}
-
 
 var extractTextFromImage = function (file_id, chatId) {
 
@@ -147,7 +168,6 @@ var extractTextFromImage = function (file_id, chatId) {
 }
 
 var registerSchedule = function(chatId){
-  
   if(fs.existsSync(TARGETIMAGE)){
     // initialization recentSchedule data
     recentSchedule.initData()
@@ -157,16 +177,9 @@ var registerSchedule = function(chatId){
     }
     if (chatId !== undefined) {
       attendList = JSON.parse(fs.readFileSync(ATTENDDEFAULTFILEPATH, 'utf8'))      
-        var python = spawn('python', ['visioning.py'])
-        python.stdout.on('data', function(data) {
-          const FILTERIMAGE = data.toString().trim()
-					fs.chmodSync(FILTERIMAGE, 777)
-          fs.readFileSync(FILTERIMAGE, 'utf8')
-          findTextInImage(FILTERIMAGE, chatId, 'kor')
-          fs.unlinkSync(FILTERIMAGE)
-        })
     }
-
+    // make image better for OCR
+    image.processForOCR(TARGETIMAGE, IMAGELOOT + '/recent_processed.png', findTextInImage, chatId, 'custom')
   } else {
     console.log(TARGETIMAGE + " is not exist.")
     if(chatId){
@@ -174,112 +187,6 @@ var registerSchedule = function(chatId){
     }
   }
 }
-
-var sendSchedule = function(chatId){
-  if(recentSchedule.isExisted()){
-    bot.sendMessage(chatId, recentSchedule.scheduleMessage() + "\n\n구글 켈린더 링크입니다. " + recentSchedule.eventLinkToGoogle())
-    // make ics file
-    if(!fs.existsSync("./data/")){
-      console.log("make 'data' directory!")
-      fs.mkdirSync("data")
-    }
-    fs.writeFileSync('data/이번주_개발제한구역일정.ics', recentSchedule.eventICSString())
-    bot.sendDocument(chatId, 'data/이번주_개발제한구역일정.ics')
-  } else {
-    bot.sendMessage(chatId, '등록된 일정이 없습니다. 정보갱신 시도합니다. 처리중 입니다. 1분 후 다시 시도해주세요.')
-    registerSchedule(chatId) 
-  }
-
-}
-
-bot.onText(/\/schedule/, function(msg, match) {
-  if(msg.chat.id === groupChatID || msg.chat.id === adminAccountID){
-    try {
-        console.log(moment().format('ll') + " " + msg.chat.first_name + ' ' + msg.chat.last_name + "님이 스케쥴을 요청하셨습니다.")
-        console.log( JSON.stringify(recentSchedule.getData()) )
-        console.log( recentSchedule.scheduleMessage() )
-        console.log( recentSchedule.eventLinkToGoogle() )
-        console.log( recentSchedule.eventICSString() )
-        sendSchedule(msg.chat.id)   
-    } catch (error) {
-      console.warn(error)
-      systemMessageUnknownError(msg.chat.id)
-    }
-  }
-})
-
-bot.onText(/\/joinlist/, function(msg, match) {
-  if(msg.chat.id === groupChatID || msg.chat.id === adminAccountID){
-    try {
-      console.log('attlist')  
-      if (attendList.date === "" || (attendList.attend.length === 0 && attendList.absent.length === 0) ) {
-        bot.sendMessage(msg.chat.id, attendList.message)
-        return
-      }
-      setAttendListMessage(msg.chat.id)
-    } catch (error) {
-      console.warn(error)
-      printMessageUnknownError(msg.chat.id)
-    }
-  }
-})
-
-bot.onText(/\/attend/, function(msg, match) {
-  if(msg.chat.id === groupChatID || msg.chat.id === adminAccountID){
-    try {
-      var name = msg.from.first_name
-      if (msg.from.last_name !== undefined){
-        name = name + ' ' + msg.from.last_name
-      }
-
-      var att = attendList.attend
-      // console.log(msg)
-      var abs = attendList.absent
-      console.log('attend', name, attendList, att.indexOf(name) === -1, abs.indexOf(name) !== -1)
-      if(att.indexOf(name) === -1){
-        att.push(name)
-      }
-      if(abs.indexOf(name) !== -1){
-        abs.splice(abs.indexOf(name), 1)
-      }
-      // console.log(att, abs)
-      // bot.sendMessage(msg.chat.id, name+"님께서 "+recentSchedule.date+" 모임 참석의사를 표현하셨습니다.")
-      setAttendListMessage(msg.chat.id)
-      saveAttendList()      
-    } catch (error) {
-      console.warn(error)
-      printMessageUnknownError(msg.chat.id)
-    }
-  }
-})
-
-bot.onText(/\/absent/, function(msg, match) {
-  if(msg.chat.id === groupChatID || msg.chat.id === adminAccountID){
-    try {
-      var name = msg.from.first_name
-      if (msg.from.last_name !== undefined){
-        name = name + ' ' + msg.from.last_name
-      }
-      var att = attendList.attend
-      var abs = attendList.absent
-      // console.log(msg)
-      console.log('absent', name, attendList, abs.indexOf(name) === -1, att.indexOf(name) !== -1)
-      if(abs.indexOf(name) === -1){
-        abs.push(name)
-      }
-      if(att.indexOf(name) !== -1){
-        att.splice(att.indexOf(name), 1)
-      }
-      // console.log(att, abs)
-      // bot.sendMessage(msg.chat.id, name+"님께서 "+recentSchedule.date+" 모임 불참의사를 표현하셨습니다.")
-      setAttendListMessage(msg.chat.id)
-      saveAttendList()      
-    } catch (error) {
-      console.warn(error)
-      printMessageUnknownError(msg.chat.id)
-    }
-  } 
-})
 
 // Listen for any kind of message. There are different kinds of messages.
 bot.on('message', function (msg) {
@@ -293,14 +200,56 @@ bot.on('message', function (msg) {
       } else if (msg.photo) {
         extractTextFromImage(msg.photo[msg.photo.length - 1].file_id, chatId)
       } else if (message) {
-        // send a message to the chat acknowledging receipt of their message
-        // TODO : create something new
+        var name = msg.from.first_name
+        if (msg.from.last_name !== undefined){
+          name = name + ' ' + msg.from.last_name
+        }
 
-        // if( message.indexOf('안녕') > -1 ){
-        //   bot.sendMessage(chatId, "안녕하세요!")
-        // } else if( message.indexOf('일정') > -1 || message.indexOf('스케쥴') > -1 ) {
-        //   sendSchedule(chatId)     
-        // }
+        var att = attendList.attend
+        var abs = attendList.absent
+        switch(message){
+          case '/schedule':
+            console.log(moment().format('ll') + " " + name + "님이 스케쥴을 요청하셨습니다.")
+            // printRecentScheduleObject()
+            sendSchedule(msg.chat.id)   
+            break
+
+          case '/joinlist':
+            console.log(moment().format('ll') + " " + name + "님이 참석인원정보를 요청하셨습니다.")
+            if (attendList.date === "" || (attendList.attend.length === 0 && attendList.absent.length === 0) ) {
+              bot.sendMessage(msg.chat.id, attendList.message)
+              return
+            }
+            setAttendListMessage(msg.chat.id)
+            break
+
+          case '/attend':
+            console.log(moment().format('ll') + " " + name + "님이 참석의사를 표현하셨습니다.")
+            if(att.indexOf(name) === -1){
+              att.push(name)
+            }
+            if(abs.indexOf(name) !== -1){
+              abs.splice(abs.indexOf(name), 1)
+            }
+            // bot.sendMessage(msg.chat.id, name+"님께서 "+recentSchedule.date+" 모임 참석의사를 표현하셨습니다.")
+            setAttendListMessage(msg.chat.id)
+            saveAttendList()  
+            break
+
+          case '/absent':
+            console.log(moment().format('ll') + " " + name + "님이 불참의사를 표현하셨습니다.")
+            if(abs.indexOf(name) === -1){
+              abs.push(name)
+            }
+            if(att.indexOf(name) !== -1){
+              att.splice(att.indexOf(name), 1)
+            }
+            // console.log(att, abs)
+            // bot.sendMessage(msg.chat.id, name+"님께서 "+recentSchedule.date+" 모임 불참의사를 표현하셨습니다.")
+            setAttendListMessage(msg.chat.id)
+            saveAttendList() 
+            break
+        }
       }
     } catch (error) {
       console.warn(error)
