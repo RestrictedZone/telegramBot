@@ -227,7 +227,6 @@ bot.on('message', function (msg) {
             // bot.sendMessage(msg.chat.id, name+"님께서 "+recentSchedule.date+" 모임 참석의사를 표현하셨습니다.")
             setAttendListMessage(msg.chat.id)
             saveAttendList()  
-            break
         } else if (message.indexOf('/absent') > 0) {
             console.log(moment().format('ll') + " " + name + "님이 불참의사를 표현하셨습니다.")
             if(abs.indexOf(name) === -1){
