@@ -192,7 +192,7 @@ bot.on('message', function (msg) {
     try {
       var chatId = msg.chat.id
       var message = msg.text
-      // console.log("from on: ", msg)
+      console.log("from on: ", msg)
       if (msg.document) {
         extractTextFromImage(msg.document.file_id, chatId)
       } else if (msg.photo) {
@@ -205,23 +205,18 @@ bot.on('message', function (msg) {
 
         var att = attendList.attend
         var abs = attendList.absent
-        switch(message){
-          case '/schedule':
+        if (message.indexOf('/schedule') > 0) {
             console.log(moment().format('ll') + " " + name + "님이 스케쥴을 요청하셨습니다.")
             // printRecentScheduleObject()
             sendSchedule(msg.chat.id)   
-            break
-
-          case '/joinlist':
+        } else if (message.indexOf('/joinlist') > 0) {
             console.log(moment().format('ll') + " " + name + "님이 참석인원정보를 요청하셨습니다.")
             if (attendList.date === "" || (attendList.attend.length === 0 && attendList.absent.length === 0) ) {
               bot.sendMessage(msg.chat.id, attendList.message)
               return
             }
             setAttendListMessage(msg.chat.id)
-            break
-
-          case '/attend':
+        } else if (message.indexOf('/attend') > 0) {
             console.log(moment().format('ll') + " " + name + "님이 참석의사를 표현하셨습니다.")
             if(att.indexOf(name) === -1){
               att.push(name)
@@ -233,8 +228,7 @@ bot.on('message', function (msg) {
             setAttendListMessage(msg.chat.id)
             saveAttendList()  
             break
-
-          case '/absent':
+        } else if (message.indexOf('/absent') > 0) {
             console.log(moment().format('ll') + " " + name + "님이 불참의사를 표현하셨습니다.")
             if(abs.indexOf(name) === -1){
               abs.push(name)
@@ -246,7 +240,6 @@ bot.on('message', function (msg) {
             // bot.sendMessage(msg.chat.id, name+"님께서 "+recentSchedule.date+" 모임 불참의사를 표현하셨습니다.")
             setAttendListMessage(msg.chat.id)
             saveAttendList() 
-            break
         }
       }
     } catch (error) {
