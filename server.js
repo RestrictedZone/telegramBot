@@ -115,15 +115,13 @@ var findTextInImage = function(imagePath, chatId, language) {
         // break;
       }
     }
-    recentSchedule.timeStart = firstLine.slice(2, 4)
-    recentSchedule.timeEnd = secondLine.slice(2, 4)
-    recentSchedule.timeStart = parseInt( recentSchedule.timeStart )
-    recentSchedule.timeEnd = parseInt( recentSchedule.timeEnd ) + 12
+    recentSchedule.timeStart = Number( firstLine.slice(2, 4) )
+    recentSchedule.timeEnd = Number( secondLine.slice(2, 4).replace('O','') ) + 12
     if(recentSchedule.timeStart !== 12){
       recentSchedule.timeStart += 12
     }
-    recentSchedule.place = lastLine.slice(10, 14)
-    recentSchedule.date = lastLine.slice(0, 10)
+    recentSchedule.place = lastLine.slice(lastLine.indexOf('일') + 1, lastLine.indexOf('예'))
+    recentSchedule.date = lastLine.slice(0, lastLine.indexOf('일') + 1)
     attendList.date = recentSchedule.date
 
     console.log(firstLine, secondLine, lastLine, recentSchedule)  
@@ -260,6 +258,6 @@ bot.on('message', function (msg) {
 
 // init schedule data
 systemMessageBotStart()
-registerSchedule(groupChatID)
+registerSchedule()
 
 
