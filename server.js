@@ -205,18 +205,18 @@ bot.on('message', function (msg) {
 
         var att = attendList.attend
         var abs = attendList.absent
-        if (message.indexOf('/schedule') >= 0) {
+        if (/\/schedule/.test(message)) {
             console.log(moment().format('ll') + " " + name + "님이 스케쥴을 요청하셨습니다.")
             // printRecentScheduleObject()
             sendSchedule(msg.chat.id)   
-        } else if (message.indexOf('/joinlist') >= 0) {
+        } else if (/\/joinlist/.test(message)) {
             console.log(moment().format('ll') + " " + name + "님이 참석인원정보를 요청하셨습니다.")
             if (attendList.date === "" || (attendList.attend.length === 0 && attendList.absent.length === 0) ) {
               bot.sendMessage(msg.chat.id, attendList.message)
               return
             }
             setAttendListMessage(msg.chat.id)
-        } else if (message.indexOf('/attend') >= 0) {
+        } else if (/\/attend/.test(message)) {
             console.log(moment().format('ll') + " " + name + "님이 참석의사를 표현하셨습니다.")
             if(att.indexOf(name) === -1){
               att.push(name)
@@ -227,7 +227,7 @@ bot.on('message', function (msg) {
             // bot.sendMessage(msg.chat.id, name+"님께서 "+recentSchedule.date+" 모임 참석의사를 표현하셨습니다.")
             setAttendListMessage(msg.chat.id)
             saveAttendList()  
-        } else if (message.indexOf('/absent') >= 0) {
+        } else if (/\/absent/.test(message)) {
             console.log(moment().format('ll') + " " + name + "님이 불참의사를 표현하셨습니다.")
             if(abs.indexOf(name) === -1){
               abs.push(name)
