@@ -7,10 +7,12 @@ var fs = require('fs'),
 
 var config = require('./config'),
   image = require('./lib/image'),
-  recentSchedule = require('./lib/scheduleData'),
+  recentSchedule = require('./lib/schedule'),
+  attendance = require('./lib/attendance')
+
   // Create a bot that uses 'polling' to fetch new updates
   bot = new TelegramBot(config.token, { polling: true })
-  
+
 moment.locale()
 
 // CONST list
@@ -19,50 +21,49 @@ const TARGETIMAGE = 'images/recent.png'
 const ATTENDFILEPATH = 'data/attend.json'
 const ATTENDDEFAULTFILEPATH = 'data/attend_default.json'
 
-// python child process
-var spawn = require('child_process').spawn
-
-
 // chatID List
 const adminAccountID = config.adminAccountID
 const groupChatID = config.groupChatID
 
-var attendList
-// for attend info data
-if(fs.existsSync(ATTENDFILEPATH)){
-  attendList = JSON.parse(fs.readFileSync(ATTENDFILEPATH, 'utf8'))
-} else {
-  attendList = JSON.parse(fs.readFileSync(ATTENDDEFAULTFILEPATH, 'utf8'))
-}
 
 // System Messages
-const systemMessageBotStart = function () {
-  bot.sendMessage(adminAccountID, "개발제한구역 관리자가 시작/재시작 되었습니다.")
+const systemMessageBotStart = function (chatId) {
+  bot.sendMessage(adminAccountID, '개발제한구역 관리자가 시작/재시작 되었습니다.')
 }
-const systemMessageBotSettingComplete = function () {
-  bot.sendMessage(adminAccountID, "개발제한구역 관리자가 서비스 준비를 마쳤습니다.")
+const systemMessageBotSettingComplete = function (chatId) {
+  bot.sendMessage(adminAccountID, '개발제한구역 관리자가 서비스 준비를 마쳤습니다.')
 }
 const systemMessageUnknownError = function (chatID) {
-  bot.sendMessage(chatID, "알수 없는 애러가 발생했습니다. 관리자가 수정할 때 까지 요청을 자제해주세요.")
+  bot.sendMessage(chatID, '알수 없는 애러가 발생했습니다. 관리자가 수정할 때 까지 요청을 자제해주세요.')
 }
 const systemMessageCheckImage = function (chatID) {
-  bot.sendMessage(chatID, "이미지 확인 중 입니다. 잠시만 기다려주세요.")
+  bot.sendMessage(chatID, '이미지 확인 중 입니다. 잠시만 기다려주세요.')
 }
 const systemMessageIncorrectImage = function (chatID) {
-  bot.sendMessage(chatID, "일정 정보 이미지가 아닙니다. 이미지를 확인하시고 다시 보내주세요.")
+  bot.sendMessage(chatID, '일정 정보 이미지가 아닙니다. 이미지를 확인하시고 다시 보내주세요.')
 }
-const setAttendListMessage = function (chatId) {
-  attendList.message = attendList.date + " 스터디 참석 정보입니다.\n참석: " + attendList.attend.toString() + "\n불참: " +  attendList.absent.toString()
-  bot.sendMessage(chatId, attendList.message)
+const setAttendDataMessage = function (chatId, onlyShow) {
+  var options
+  if(onlyShow !== true) {
+    options = {
+    reply_markup: {
+        inline_keyboard: [
+          [{text: '참석', callback_data: 'attend'}],
+          [{text: '불참', callback_data: 'absent'}]
+        ]
+      }
+    };
+  }
+  bot.sendMessage(chatId, attendance.getMessage(), options)
 }
 
 const sendSchedule = function(chatId){
   if(recentSchedule.isExisted()){
-    bot.sendMessage(chatId, recentSchedule.scheduleMessage() + "\n\n구글 켈린더 링크입니다. " + recentSchedule.eventLinkToGoogle())
+    bot.sendMessage(chatId, recentSchedule.scheduleMessage() + '\n\n구글 켈린더 링크입니다. ' + recentSchedule.eventLinkToGoogle())
     // make ics file
-    if(!fs.existsSync("./data/")){
-      console.log("make 'data' directory!")
-      fs.mkdirSync("data")
+    if(!fs.existsSync('./data/')){
+      console.log('make "data" directory!')
+      fs.mkdirSync('data')
     }
     fs.writeFileSync('data/이번주_개발제한구역일정.ics', recentSchedule.eventICSString())
     bot.sendDocument(chatId, 'data/이번주_개발제한구역일정.ics')
@@ -72,21 +73,30 @@ const sendSchedule = function(chatId){
   }
 }
 
+const setAttend = function (name) {
+  console.log(moment().format('ll') + ' ' + name + '님이 참석의사를 표현하셨습니다.')
+  attendance.addAttend(name)
+}
+
+const setAbsent = function (name) {
+  console.log(moment().format('ll') + ' ' + name + '님이 불참의사를 표현하셨습니다.')
+  attendance.addAbsent(name)
+}
+
+const makeName = function (dataFrom) {
+  var name = dataFrom.first_name
+  if (dataFrom.last_name !== undefined){
+    name = name + ' ' + dataFrom.last_name
+  }
+  return name
+}
+
 // print log
 const printRecentScheduleObject = function () {
   console.log( JSON.stringify(recentSchedule.getData()) )
   console.log( recentSchedule.scheduleMessage() )
   console.log( recentSchedule.eventLinkToGoogle() )
   console.log( recentSchedule.eventICSString() )
-}
-
-
-// util functions
-const saveAttendList = function () {
-  fs.writeFile(ATTENDFILEPATH, JSON.stringify(attendList), (err) => {
-    if (err) throw err
-    console.log('The file' + ATTENDFILEPATH + 'has been saved!')
-  })
 }
 
 // ocr by tesseract
@@ -122,10 +132,10 @@ var findTextInImage = function(imagePath, chatId, language) {
     }
     recentSchedule.place = lastLine.slice(lastLine.indexOf('일') + 1, lastLine.indexOf('예'))
     recentSchedule.date = lastLine.slice(0, lastLine.indexOf('일') + 1)
-    attendList.date = recentSchedule.date
+    attendance.setDate(recentSchedule.date)
 
     // console.log(firstLine, secondLine, lastLine, recentSchedule)
-    systemMessageBotSettingComplete()
+    systemMessageBotSettingComplete(chatId)
     if(chatId){
       sendSchedule(chatId)
     }
@@ -136,7 +146,6 @@ var findTextInImage = function(imagePath, chatId, language) {
 }
 
 var extractTextFromImage = function (file_id, chatId) {
-
   bot.downloadFile(file_id, IMAGELOOT)
   .then(function(downloadedFilepath){
     new Promise(function(resolve, reject){
@@ -147,21 +156,16 @@ var extractTextFromImage = function (file_id, chatId) {
       } else {
         resolve(true)
       }
-
     }).then(function(isTargetImage){
-
       if(isTargetImage){
         fs.renameSync(downloadedFilepath, TARGETIMAGE)
-
         registerSchedule(chatId)
-
       } else {
         console.log('This image is not TARGET image!')
         systemMessageIncorrectImage(chatId)
         fs.unlinkSync(downloadedFilepath)
       }
     }).catch(console.log.bind(console))
-
   })
 }
 
@@ -174,81 +178,73 @@ var registerSchedule = function(chatId){
       fs.unlinkSync(ATTENDFILEPATH)
     }
     if (chatId !== undefined) {
-      attendList = JSON.parse(fs.readFileSync(ATTENDDEFAULTFILEPATH, 'utf8'))      
+      attendance.getDataFromFile()
     }
     // make image better for OCR
     image.processForOCR(TARGETIMAGE, IMAGELOOT + '/recent_processed.png', findTextInImage, chatId, 'custom')
   } else {
-    console.log(TARGETIMAGE + " is not exist.")
+    console.log(TARGETIMAGE + ' is not exist.')
     if(chatId){
-      bot.sendMessage(chatId, "저에게 일정 이미지를 보내신적이 없습니다. 일정 이미지를 보내신 후 다시 시도해주세요.")
+      bot.sendMessage(chatId, '저에게 일정 이미지를 보내신적이 없습니다. 일정 이미지를 보내신 후 다시 시도해주세요.')
     }
   }
 }
 
 // Listen for any kind of message. There are different kinds of messages.
-bot.on('message', function (msg) {
-  if(msg.chat.id === groupChatID || msg.chat.id === adminAccountID){
+bot.on('message', function (msg, match) {
+  var chatId = msg.chat.id
+  if(chatId === groupChatID || chatId === adminAccountID){
     try {
-      var chatId = msg.chat.id
       var message = msg.text
-      console.log("from on: ", msg)
+      console.log('from on: ', msg)
       if (msg.document) {
         extractTextFromImage(msg.document.file_id, chatId)
       } else if (msg.photo) {
         extractTextFromImage(msg.photo[msg.photo.length - 1].file_id, chatId)
       } else if (message) {
-        var name = msg.from.first_name
-        if (msg.from.last_name !== undefined){
-          name = name + ' ' + msg.from.last_name
-        }
-
-        var att = attendList.attend
-        var abs = attendList.absent
+        var name = makeName(msg.from)
         if (/\/schedule/.test(message)) {
-            console.log(moment().format('ll') + " " + name + "님이 스케쥴을 요청하셨습니다.")
-            // printRecentScheduleObject()
-            sendSchedule(msg.chat.id)   
+          console.log(moment().format('ll') + ' ' + name + '님이 스케쥴을 요청하셨습니다.')
+          // printRecentScheduleObject()
+          sendSchedule(chatId)   
         } else if (/\/joinlist/.test(message)) {
-            console.log(moment().format('ll') + " " + name + "님이 참석인원정보를 요청하셨습니다.")
-            if (attendList.date === "" || (attendList.attend.length === 0 && attendList.absent.length === 0) ) {
-              bot.sendMessage(msg.chat.id, attendList.message)
-              return
-            }
-            setAttendListMessage(msg.chat.id)
+          console.log(moment().format('ll') + ' ' + name + '님이 참석인원정보를 요청하셨습니다.')
+          setAttendDataMessage(chatId)
         } else if (/\/attend/.test(message)) {
-            console.log(moment().format('ll') + " " + name + "님이 참석의사를 표현하셨습니다.")
-            if(att.indexOf(name) === -1){
-              att.push(name)
-            }
-            if(abs.indexOf(name) !== -1){
-              abs.splice(abs.indexOf(name), 1)
-            }
-            // bot.sendMessage(msg.chat.id, name+"님께서 "+recentSchedule.date+" 모임 참석의사를 표현하셨습니다.")
-            setAttendListMessage(msg.chat.id)
-            saveAttendList()  
+          setAttend(name)
+          setAttendDataMessage(chatId, true)
         } else if (/\/absent/.test(message)) {
-            console.log(moment().format('ll') + " " + name + "님이 불참의사를 표현하셨습니다.")
-            if(abs.indexOf(name) === -1){
-              abs.push(name)
-            }
-            if(att.indexOf(name) !== -1){
-              att.splice(att.indexOf(name), 1)
-            }
-            // bot.sendMessage(msg.chat.id, name+"님께서 "+recentSchedule.date+" 모임 불참의사를 표현하셨습니다.")
-            setAttendListMessage(msg.chat.id)
-            saveAttendList() 
+          setAbsent(name)
+          setAttendDataMessage(chatId, true)
         }
       }
     } catch (error) {
       console.warn(error)
-      printMessageUnknownError(msg.chat.id)
+      systemMessageUnknownError(chatId)
     }
   }
 })
 
+// process for inline_keyboard
+bot.on('callback_query', function(response) {
+  console.log('callback_query', response)
+  var chatId = response.message.chat.id
+  var name = makeName(response.from)
+  var replyData = response.data
+  switch(replyData){
+    case 'attend':
+      console.log('select attend!')
+      setAttend(name)
+      setAttendDataMessage(chatId, true)
+      break
+    case 'absent':
+      console.log('select absent!')
+      setAbsent(name)
+      setAttendDataMessage(chatId, true)
+      break
+  }
+});
+
 // init schedule data
 systemMessageBotStart()
 registerSchedule()
-
-
