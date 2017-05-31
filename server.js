@@ -149,7 +149,9 @@ var extractTextFromImage = function (file_id, chatId) {
   bot.downloadFile(file_id, IMAGELOOT)
   .then(function(downloadedFilepath){
     new Promise(function(resolve, reject){
-      systemMessageCheckImage(chatId)
+      if(adminAccountID !== undefined && chatId === adminAccountID) {
+        systemMessageCheckImage(chatId)
+      }
       fs.chmodSync(downloadedFilepath, 777)
       if(fs.existsSync(TARGETIMAGE)){
         image.compare(downloadedFilepath, TARGETIMAGE, resolve)
@@ -162,7 +164,9 @@ var extractTextFromImage = function (file_id, chatId) {
         registerSchedule(chatId)
       } else {
         console.log('This image is not TARGET image!')
-        systemMessageIncorrectImage(chatId)
+        if(adminAccountID !== undefined && chatId === adminAccountID) {
+          systemMessageIncorrectImage(chatId)
+        }
         fs.unlinkSync(downloadedFilepath)
       }
     }).catch(console.log.bind(console))

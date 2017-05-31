@@ -19,6 +19,7 @@
   "license": "MIT",
   "dependencies": {
     "bluebird": "^3.4.7",
+    "cron": "^1.2.1",
     "gm": "^1.23.0",
     "ics": "^1.2.0",
     "moment": "^2.17.1",
