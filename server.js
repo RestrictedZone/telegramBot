@@ -2,8 +2,8 @@ var fs = require('fs'),
   gm = require('gm'),
   Tesseract = require('tesseract.js'),
   TelegramBot = require('node-telegram-bot-api'),
-  moment = require('moment'),
-  Promise = require('bluebird')
+  Promise = require('bluebird'),
+  CronJob = require("cron").CronJob;
 
 var config = require('./config'),
   image = require('./lib/image'),
@@ -13,13 +13,22 @@ var config = require('./config'),
   // Create a bot that uses 'polling' to fetch new updates
   bot = new TelegramBot(config.token, { polling: true })
 
-moment.locale()
-
 // CONST list
 const IMAGELOOT = 'images'
 const TARGETIMAGE = 'images/recent.png'
 const ATTENDFILEPATH = 'data/attend.json'
 const ATTENDDEFAULTFILEPATH = 'data/attend_default.json'
+
+const TIMEZONEOFFSET = new Date().getTimezoneOffset() * 60000
+
+const ATTENDASK = {
+  reply_markup: {
+    inline_keyboard: [
+      [{text: '참석', callback_data: 'attend'}],
+      [{text: '불참', callback_data: 'absent'}]
+    ]
+  }
+}
 
 // chatID List
 const adminAccountID = config.adminAccountID
@@ -43,18 +52,7 @@ const systemMessageIncorrectImage = function (chatID) {
   bot.sendMessage(chatID, '일정 정보 이미지가 아닙니다. 이미지를 확인하시고 다시 보내주세요.')
 }
 const setAttendDataMessage = function (chatId, onlyShow) {
-  var options
-  if(onlyShow !== true) {
-    options = {
-    reply_markup: {
-        inline_keyboard: [
-          [{text: '참석', callback_data: 'attend'}],
-          [{text: '불참', callback_data: 'absent'}]
-        ]
-      }
-    };
-  }
-  bot.sendMessage(chatId, attendance.getMessage(), options)
+  bot.sendMessage(chatId, attendance.getMessage(), onlyShow ? {} : ATTENDASK)
 }
 
 const sendSchedule = function(chatId){
@@ -74,12 +72,12 @@ const sendSchedule = function(chatId){
 }
 
 const setAttend = function (name) {
-  console.log(moment().format('ll') + ' ' + name + '님이 참석의사를 표현하셨습니다.')
+  console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 참석의사를 표현하셨습니다.')
   attendance.addAttend(name)
 }
 
 const setAbsent = function (name) {
-  console.log(moment().format('ll') + ' ' + name + '님이 불참의사를 표현하셨습니다.')
+  console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 불참의사를 표현하셨습니다.')
   attendance.addAbsent(name)
 }
 
@@ -182,7 +180,7 @@ var registerSchedule = function(chatId){
       fs.unlinkSync(ATTENDFILEPATH)
     }
     if (chatId !== undefined) {
-      attendance.getDataFromFile()
+      attendance.setDataFromFile()
     }
     // make image better for OCR
     image.processForOCR(TARGETIMAGE, IMAGELOOT + '/recent_processed.png', findTextInImage, chatId, 'custom')
@@ -200,7 +198,7 @@ bot.on('message', function (msg, match) {
   if(chatId === groupChatID || chatId === adminAccountID){
     try {
       var message = msg.text
-      console.log('from on: ', msg)
+      // console.log('from on: ', msg)
       if (msg.document) {
         extractTextFromImage(msg.document.file_id, chatId)
       } else if (msg.photo) {
@@ -208,11 +206,11 @@ bot.on('message', function (msg, match) {
       } else if (message) {
         var name = makeName(msg.from)
         if (/\/schedule/.test(message)) {
-          console.log(moment().format('ll') + ' ' + name + '님이 스케쥴을 요청하셨습니다.')
+          console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 스케쥴을 요청하셨습니다.')
           // printRecentScheduleObject()
           sendSchedule(chatId)   
         } else if (/\/joinlist/.test(message)) {
-          console.log(moment().format('ll') + ' ' + name + '님이 참석인원정보를 요청하셨습니다.')
+          console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 참석인원정보를 요청하셨습니다.')
           setAttendDataMessage(chatId)
         } else if (/\/attend/.test(message)) {
           setAttend(name)
@@ -252,3 +250,11 @@ bot.on('callback_query', function(response) {
 // init schedule data
 systemMessageBotStart()
 registerSchedule()
+
+// Weekly routine is running every Friday at 9:30pm
+var remindSchedule = new CronJob('00 30 21 * * 5', function () {
+  if (groupChatID !== undefined || groupChatID !== null){
+    bot.sendMessage(groupChatID, '[알림] 참석/불참을 안하신 분들은 참석/불참 여부 등록을 부탁드립니다.', ATTENDASK)
+  }
+})
+remindSchedule.start()
