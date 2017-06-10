@@ -57,7 +57,12 @@ const setAttendDataMessage = function (chatId, onlyShow) {
   bot.sendMessage(chatId, attendance.getMessage(), onlyShow ? {} : ATTENDASK)
 }
 
-const sendSchedule = function(chatId){
+const sendSchedule = function(chatId, textOnly){
+  if(textOnly){
+    bot.sendMessage(chatId, recentSchedule.scheduleMessage())
+    return
+  }
+
   if(recentSchedule.isExisted()){
     bot.sendMessage(chatId, recentSchedule.scheduleMessage() + '\n\n구글 켈린더 링크입니다. ' + recentSchedule.eventLinkToGoogle())
     // make ics file
@@ -207,10 +212,13 @@ bot.on('message', function (msg, match) {
         extractTextFromImage(msg.photo[msg.photo.length - 1].file_id, chatId)
       } else if (message) {
         var name = makeName(msg.from)
-        if (/\/schedule/.test(message)) {
-          console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 스케쥴을 요청하셨습니다.')
+        if (/\/scheduletext/.test(message)) {
+          console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 스케쥴(텍스트만)을 요청하셨습니다.')
           // printRecentScheduleObject()
-          sendSchedule(chatId)   
+          sendSchedule(chatId, true)
+        } else if (/\/schedule/.test(message)) {
+          console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 스케쥴을 요청하셨습니다.')
+          sendSchedule(chatId)
         } else if (/\/joinlist/.test(message)) {
           console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 참석인원정보를 요청하셨습니다.')
           setAttendDataMessage(chatId)
