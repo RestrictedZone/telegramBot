@@ -24,9 +24,11 @@ const TIMEZONEOFFSET = new Date().getTimezoneOffset() * 60000
 const ATTENDASK = {
   reply_markup: {
     inline_keyboard: [
-      [{text: '참석', callback_data: 'attend'}],
-      [{text: '불참', callback_data: 'absent'}]
-    ]
+      [
+        {text: '참석', callback_data: 'attend'},
+        {text: '불참', callback_data: 'absent'}
+      ]
+    ],
   }
 }
 
@@ -243,6 +245,10 @@ bot.on('callback_query', function(response) {
       setAbsent(chatId, name)
       break
   }
+  bot.editMessageText(attendance.getMessage(), {
+    'chat_id': response.from.id,
+    'message_id': response.message.message_id
+  })
 })
 
 // init schedule data
