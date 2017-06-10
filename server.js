@@ -252,8 +252,8 @@ systemMessageBotStart()
 registerSchedule()
 
 // Weekly routine is running every Friday at 9:30pm
-var remindSchedule = new CronJob('00 30 21 * * 5', function () {
-  if (groupChatID !== undefined || groupChatID !== null){
+var remindSchedule = new CronJob('00 30 19 * * 5', function () {
+  if (groupChatID !== undefined || groupChatID !== null || attendance.totelResponseCount() < 5){
     bot.sendMessage(groupChatID, '[알림] 참석/불참을 안하신 분들은 참석/불참 여부 등록을 부탁드립니다.', ATTENDASK)
   }
 })
