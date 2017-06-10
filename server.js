@@ -64,7 +64,13 @@ const sendSchedule = function(chatId, textOnly){
   }
 
   if(recentSchedule.isExisted()){
-    bot.sendMessage(chatId, recentSchedule.scheduleMessage() + '\n\n구글 켈린더 링크입니다. ' + recentSchedule.eventLinkToGoogle())
+    bot.sendMessage(chatId, recentSchedule.scheduleMessage(), {
+      reply_markup: {
+        inline_keyboard: [
+          [{text: '구글 켈린더에 등록하기(링크)', url: recentSchedule.eventLinkToGoogle()}]
+        ],
+      }
+    })
     // make ics file
     if(!fs.existsSync('./data/')){
       console.log('make "data" directory!')
