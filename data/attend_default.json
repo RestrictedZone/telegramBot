@@ -1,10 +1,7 @@
 {
     "date": "",
     "message": "아직 등록된 정보가 없습니다.",
-    "attend": [
-
-    ],
-    "absent": [
-        
-    ]
+    "attend": [],
+    "absent": [],
+    "responsedPersonList": {}
 }

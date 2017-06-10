@@ -71,14 +71,14 @@ const sendSchedule = function(chatId){
   }
 }
 
-const setAttend = function (name) {
+const setAttend = function (chatID, name) {
   console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 참석의사를 표현하셨습니다.')
-  attendance.addAttend(name)
+  attendance.addAttend(chatID, name)
 }
 
-const setAbsent = function (name) {
+const setAbsent = function (chatID, name) {
   console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 불참의사를 표현하셨습니다.')
-  attendance.addAbsent(name)
+  attendance.addAbsent(chatID, name)
 }
 
 const makeName = function (dataFrom) {
@@ -213,10 +213,10 @@ bot.on('message', function (msg, match) {
           console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 참석인원정보를 요청하셨습니다.')
           setAttendDataMessage(chatId)
         } else if (/\/attend/.test(message)) {
-          setAttend(name)
+          setAttend(chatId, name)
           setAttendDataMessage(chatId, true)
         } else if (/\/absent/.test(message)) {
-          setAbsent(name)
+          setAbsent(chatId, name)
           setAttendDataMessage(chatId, true)
         }
       }
@@ -236,16 +236,14 @@ bot.on('callback_query', function(response) {
   switch(replyData){
     case 'attend':
       console.log('select attend!')
-      setAttend(name)
-      setAttendDataMessage(chatId, true)
+      setAttend(chatId, name)
       break
     case 'absent':
       console.log('select absent!')
-      setAbsent(name)
-      setAttendDataMessage(chatId, true)
+      setAbsent(chatId, name)
       break
   }
-});
+})
 
 // init schedule data
 systemMessageBotStart()
