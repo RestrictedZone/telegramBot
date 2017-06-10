@@ -38,10 +38,10 @@ const groupChatID = config.groupChatID
 
 
 // System Messages
-const systemMessageBotStart = function (chatId) {
+const systemMessageBotStart = function (chatID) {
   bot.sendMessage(adminAccountID, '개발제한구역 관리자가 시작/재시작 되었습니다.')
 }
-const systemMessageBotSettingComplete = function (chatId) {
+const systemMessageBotSettingComplete = function (chatID) {
   bot.sendMessage(adminAccountID, '개발제한구역 관리자가 서비스 준비를 마쳤습니다.')
 }
 const systemMessageUnknownError = function (chatID) {
@@ -53,18 +53,18 @@ const systemMessageCheckImage = function (chatID) {
 const systemMessageIncorrectImage = function (chatID) {
   bot.sendMessage(chatID, '일정 정보 이미지가 아닙니다. 이미지를 확인하시고 다시 보내주세요.')
 }
-const setAttendDataMessage = function (chatId, onlyShow) {
-  bot.sendMessage(chatId, attendance.getMessage(), onlyShow ? {} : ATTENDASK)
+const setAttendDataMessage = function (chatID, onlyShow) {
+  bot.sendMessage(chatID, attendance.getMessage(), onlyShow ? {} : ATTENDASK)
 }
 
-const sendSchedule = function(chatId, textOnly){
+const sendSchedule = function(chatID, textOnly){
   if(textOnly){
-    bot.sendMessage(chatId, recentSchedule.scheduleMessage())
+    bot.sendMessage(chatID, recentSchedule.scheduleMessage())
     return
   }
 
   if(recentSchedule.isExisted()){
-    bot.sendMessage(chatId, recentSchedule.scheduleMessage(), {
+    bot.sendMessage(chatID, recentSchedule.scheduleMessage(), {
       reply_markup: {
         inline_keyboard: [
           [{text: '구글 켈린더에 등록하기(링크)', url: recentSchedule.eventLinkToGoogle()}]
@@ -77,10 +77,10 @@ const sendSchedule = function(chatId, textOnly){
       fs.mkdirSync('data')
     }
     fs.writeFileSync('data/이번주_개발제한구역일정.ics', recentSchedule.eventICSString())
-    bot.sendDocument(chatId, 'data/이번주_개발제한구역일정.ics')
+    bot.sendDocument(chatID, 'data/이번주_개발제한구역일정.ics')
   } else {
-    bot.sendMessage(chatId, '등록된 일정이 없습니다. 저장된 일정 정보 불러오기를 시도합니다. 1분 후 다시 시도해주세요. 같은 메시지를 보셨다면 일정 등록을 위한 일정 이미지를 업로드 해주세요.')
-    registerSchedule(chatId) 
+    bot.sendMessage(chatID, '등록된 일정이 없습니다. 저장된 일정 정보 불러오기를 시도합니다. 1분 후 다시 시도해주세요. 같은 메시지를 보셨다면 일정 등록을 위한 일정 이미지를 업로드 해주세요.')
+    registerSchedule(chatID) 
   }
 }
 
@@ -111,7 +111,7 @@ const printRecentScheduleObject = function () {
 }
 
 // ocr by tesseract
-var findTextInImage = function(imagePath, chatId, language) {
+var findTextInImage = function(imagePath, chatID, language) {
   if(language == 'undefined' || language == null){
     language = 'kor'
   }
@@ -146,9 +146,9 @@ var findTextInImage = function(imagePath, chatId, language) {
     attendance.setDate(recentSchedule.date)
 
     // console.log(firstLine, secondLine, lastLine, recentSchedule)
-    systemMessageBotSettingComplete(chatId)
-    if(chatId){
-      sendSchedule(chatId)
+    systemMessageBotSettingComplete(chatID)
+    if(chatID){
+      sendSchedule(chatID)
     }
   }).finally(function(){
     // delete cropped image
@@ -156,12 +156,12 @@ var findTextInImage = function(imagePath, chatId, language) {
   })
 }
 
-var extractTextFromImage = function (file_id, chatId) {
+var extractTextFromImage = function (file_id, chatID) {
   bot.downloadFile(file_id, IMAGELOOT)
   .then(function(downloadedFilepath){
     new Promise(function(resolve, reject){
-      if(adminAccountID !== undefined && chatId === adminAccountID) {
-        systemMessageCheckImage(chatId)
+      if(adminAccountID !== undefined && chatID === adminAccountID) {
+        systemMessageCheckImage(chatID)
       }
       fs.chmodSync(downloadedFilepath, 777)
       if(fs.existsSync(TARGETIMAGE)){
@@ -172,11 +172,11 @@ var extractTextFromImage = function (file_id, chatId) {
     }).then(function(isTargetImage){
       if(isTargetImage){
         fs.renameSync(downloadedFilepath, TARGETIMAGE)
-        registerSchedule(chatId)
+        registerSchedule(chatID)
       } else {
         console.log('This image is not TARGET image!')
-        if(adminAccountID !== undefined && chatId === adminAccountID) {
-          systemMessageIncorrectImage(chatId)
+        if(adminAccountID !== undefined && chatID === adminAccountID) {
+          systemMessageIncorrectImage(chatID)
         }
         fs.unlinkSync(downloadedFilepath)
       }
@@ -184,61 +184,61 @@ var extractTextFromImage = function (file_id, chatId) {
   })
 }
 
-var registerSchedule = function(chatId){
+var registerSchedule = function(chatID){
   if(fs.existsSync(TARGETIMAGE)){
     // initialization recentSchedule data
     recentSchedule.initData()
-    if(chatId !== undefined && fs.existsSync(ATTENDFILEPATH)){ 
+    if(chatID !== undefined && fs.existsSync(ATTENDFILEPATH)){ 
       // init process  
       fs.unlinkSync(ATTENDFILEPATH)
     }
-    if (chatId !== undefined) {
+    if (chatID !== undefined) {
       attendance.setDataFromFile()
     }
     // make image better for OCR
-    image.processForOCR(TARGETIMAGE, IMAGELOOT + '/recent_processed.png', findTextInImage, chatId, 'custom')
+    image.processForOCR(TARGETIMAGE, IMAGELOOT + '/recent_processed.png', findTextInImage, chatID, 'custom')
   } else {
     console.log(TARGETIMAGE + ' is not exist.')
-    if(chatId){
-      bot.sendMessage(chatId, '저에게 일정 이미지를 보내신적이 없습니다. 일정 이미지를 보내신 후 다시 시도해주세요.')
+    if(chatID){
+      bot.sendMessage(chatID, '저에게 일정 이미지를 보내신적이 없습니다. 일정 이미지를 보내신 후 다시 시도해주세요.')
     }
   }
 }
 
 // Listen for any kind of message. There are different kinds of messages.
 bot.on('message', function (msg, match) {
-  var chatId = msg.chat.id
-  if(chatId === groupChatID || chatId === adminAccountID){
+  var chatID = msg.chat.id
+  if(chatID === groupChatID || chatID === adminAccountID){
     try {
       var message = msg.text
       // console.log('from on: ', msg)
       if (msg.document) {
-        extractTextFromImage(msg.document.file_id, chatId)
+        extractTextFromImage(msg.document.file_id, chatID)
       } else if (msg.photo) {
-        extractTextFromImage(msg.photo[msg.photo.length - 1].file_id, chatId)
+        extractTextFromImage(msg.photo[msg.photo.length - 1].file_id, chatID)
       } else if (message) {
         var name = makeName(msg.from)
         if (/\/scheduletext/.test(message)) {
           console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 스케쥴(텍스트만)을 요청하셨습니다.')
           // printRecentScheduleObject()
-          sendSchedule(chatId, true)
+          sendSchedule(chatID, true)
         } else if (/\/schedule/.test(message)) {
           console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 스케쥴을 요청하셨습니다.')
-          sendSchedule(chatId)
+          sendSchedule(chatID)
         } else if (/\/joinlist/.test(message)) {
           console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 참석인원정보를 요청하셨습니다.')
-          setAttendDataMessage(chatId)
+          setAttendDataMessage(chatID)
         } else if (/\/attend/.test(message)) {
-          setAttend(chatId, name)
-          setAttendDataMessage(chatId, true)
+          setAttend(chatID, name)
+          setAttendDataMessage(chatID, true)
         } else if (/\/absent/.test(message)) {
-          setAbsent(chatId, name)
-          setAttendDataMessage(chatId, true)
+          setAbsent(chatID, name)
+          setAttendDataMessage(chatID, true)
         }
       }
     } catch (error) {
       console.warn(error)
-      systemMessageUnknownError(chatId)
+      systemMessageUnknownError(chatID)
     }
   }
 })
@@ -246,17 +246,17 @@ bot.on('message', function (msg, match) {
 // process for inline_keyboard
 bot.on('callback_query', function(response) {
   console.log('callback_query', response)
-  var chatId = response.message.chat.id
+  var chatID = response.message.chat.id
   var name = makeName(response.from)
   var replyData = response.data
   switch(replyData){
     case 'attend':
       console.log('select attend!')
-      setAttend(chatId, name)
+      setAttend(chatID, name)
       break
     case 'absent':
       console.log('select absent!')
-      setAbsent(chatId, name)
+      setAbsent(chatID, name)
       break
   }
   bot.editMessageText(attendance.getMessage(), {
