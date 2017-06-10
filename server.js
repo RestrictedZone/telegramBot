@@ -227,7 +227,11 @@ bot.on('message', function (msg, match) {
           sendSchedule(chatID)
         } else if (/\/joinlist/.test(message)) {
           console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 참석인원정보를 요청하셨습니다.')
-          setAttendDataMessage(chatID)
+          if(attendance.isResponsedPerson(chatID)){
+            setAttendDataMessage(chatID, true)
+          } else {
+            setAttendDataMessage(chatID)
+          }
         } else if (/\/attend/.test(message)) {
           setAttend(chatID, name)
           setAttendDataMessage(chatID, true)
