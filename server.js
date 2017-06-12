@@ -208,6 +208,7 @@ var registerSchedule = function(chatID){
 // Listen for any kind of message. There are different kinds of messages.
 bot.on('message', function (msg, match) {
   var chatID = msg.chat.id
+  var fromID = msg.from.id
   if(chatID === groupChatID || chatID === adminAccountID){
     try {
       var message = msg.text
@@ -233,10 +234,10 @@ bot.on('message', function (msg, match) {
             setAttendDataMessage(chatID)
           }
         } else if (/\/attend/.test(message)) {
-          setAttend(chatID, name)
+          setAttend(fromID, name)
           setAttendDataMessage(chatID, true)
         } else if (/\/absent/.test(message)) {
-          setAbsent(chatID, name)
+          setAbsent(fromID, name)
           setAttendDataMessage(chatID, true)
         }
       }
@@ -251,20 +252,21 @@ bot.on('message', function (msg, match) {
 bot.on('callback_query', function(response) {
   console.log('callback_query', response)
   var chatID = response.message.chat.id
+  var fromID = response.from.id
   var name = makeName(response.from)
   var replyData = response.data
   switch(replyData){
     case 'attend':
       console.log('select attend!')
-      setAttend(chatID, name)
+      setAttend(fromID, name)
       break
     case 'absent':
       console.log('select absent!')
-      setAbsent(chatID, name)
+      setAbsent(fromID, name)
       break
   }
   bot.editMessageText(attendance.getMessage(), {
-    'chat_id': response.from.id,
+    'chat_id': response.message.chat.id,
     'message_id': response.message.message_id
   })
 })
