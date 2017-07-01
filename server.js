@@ -205,6 +205,16 @@ var registerSchedule = function(chatID){
   }
 }
 
+var registerScheduleByText = function(message) {
+  var messageArray = message.split(' ')
+  recentSchedule.initData()
+  recentSchedule.timeStart =  parseInt(messageArray[2])
+  recentSchedule.timeEnd = parseInt(messageArray[3])
+  recentSchedule.place = messageArray[4]
+  recentSchedule.date = messageArray[1]
+  attendance.setDate(recentSchedule.date)
+}
+
 // Listen for any kind of message. There are different kinds of messages.
 bot.on('message', function (msg, match) {
   var chatID = msg.chat.id
@@ -239,6 +249,13 @@ bot.on('message', function (msg, match) {
         } else if (/\/absent/.test(message) || /^불참$/.test(message)) {
           setAbsent(fromID, name)
           setAttendDataMessage(chatID, true)
+        }
+        if (chatID === adminAccountID) {
+          if (/^일정입력 /.test(message) || /^일정등록 /.test(message)) {
+            console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + '관리자가 일정을 입력했습니다.')
+            registerScheduleByText(message)
+            sendSchedule(chatID)
+          }
         }
       }
     } catch (error) {
