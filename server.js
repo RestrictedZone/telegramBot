@@ -38,10 +38,10 @@ const groupChatID = config.groupChatID
 
 
 // System Messages
-const systemMessageBotStart = function (chatID) {
+const systemMessageBotStart = function () {
   bot.sendMessage(adminAccountID, '개발제한구역 관리자가 시작/재시작 되었습니다.')
 }
-const systemMessageBotSettingComplete = function (chatID) {
+const systemMessageBotSettingComplete = function () {
   bot.sendMessage(adminAccountID, '개발제한구역 관리자가 서비스 준비를 마쳤습니다.')
 }
 const systemMessageUnknownError = function (chatID) {
@@ -233,10 +233,10 @@ bot.on('message', function (msg, match) {
           } else {
             setAttendDataMessage(chatID)
           }
-        } else if (/\/attend/.test(message)) {
+        } else if (/\/attend/.test(message) || /^참석$/.test(message)) {
           setAttend(fromID, name)
           setAttendDataMessage(chatID, true)
-        } else if (/\/absent/.test(message)) {
+        } else if (/\/absent/.test(message) || /^불참$/.test(message)) {
           setAbsent(fromID, name)
           setAttendDataMessage(chatID, true)
         }
@@ -281,7 +281,7 @@ var remindSchedule = new CronJob('00 30 19 * * 5', function () {
     bot.sendMessage(groupChatID, '[알림] 참석/불참을 안하신 분들은 참석/불참 여부 등록을 부탁드립니다.', {
       reply_markup: {
         keyboard: [
-          [{text: '/attend'}, {text: '/absent'}]
+          [{text: '참석'}, {text: '불참'}]
         ],
         resize_keyboard: true,
         one_time_keyboard: true,
