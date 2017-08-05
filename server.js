@@ -222,7 +222,7 @@ bot.on('message', function (msg, match) {
   if(chatID === groupChatID || chatID === adminAccountID){
     try {
       var message = msg.text
-      console.log('from on: ', msg)
+      // console.log('from on: ', msg)
       if (msg.document) {
         if(msg.document.mine_type === 'image/png') {
           extractTextFromImage(msg.document.file_id, chatID)
