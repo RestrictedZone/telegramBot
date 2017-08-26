@@ -71,12 +71,16 @@ tesseract는 영어 인식을 잘하는 편이지만 한국어 인식이 좋지 
 
 트레이닝 셋을 적용 시키시 위해서 아래의 명령어를 입력합니다.
 
+```
     cp custom.traineddata.backup custom.traineddata
+```
 
 그 다음 아래의 명령어를 통해 프로그램이 실행 됩니다.
 
+```
     npm start
-    
+```
+
 혹시 node.js의 실행 명령어가 `nodejs`인 경우 package.json의 명령어를 바꾸거나, `nodejs server` 혹은 `nodejs server.js`로 실행하면 된다.
 
 ### Ubuntu에서 node 명령어가 동작하지 않는 경우
