@@ -136,8 +136,8 @@ var findTextInImage = function(imagePath, chatID, language) {
         // break;
       }
     }
-    recentSchedule.timeStart = firstLine.replace(/ /g,'').slice(2, 7)
-    recentSchedule.timeEnd = (parseInt(secondLine.replace(/ /g,'').slice(2,5)) + 12) + secondLine.replace(/ /g,'').slice(4,7)
+    recentSchedule.timeStart = firstLine.replace(/ /g,'').replace(/O/gi,'0').slice(2, 7)
+    recentSchedule.timeEnd = (parseInt(secondLine.replace(/ /g,'').replace(/O/gi,'0').slice(2,4)) + 12) + secondLine.replace(/ /g,'').replace(/O/gi,'0').slice(4,7)
     if(recentSchedule.timeStart.slice(0,2) !== '12'){
       recentSchedule.timeStart = (parseInt(recentSchedule.timeStart.slice(0,2)) + 12) + recentSchedule.timeStart.slice(2)
     }
