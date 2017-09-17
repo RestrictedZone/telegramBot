@@ -58,12 +58,12 @@ const setAttendDataMessage = function (chatID, onlyShow) {
 }
 
 const sendSchedule = function(chatID, textOnly){
-  if(textOnly){
-    bot.sendMessage(chatID, recentSchedule.scheduleMessage())
-    return
-  }
-
   if(recentSchedule.isExisted()){
+    if(textOnly){
+      bot.sendMessage(chatID, recentSchedule.scheduleMessage())
+      return
+    }
+
     bot.sendMessage(chatID, recentSchedule.scheduleMessage(), {
       reply_markup: {
         inline_keyboard: [
@@ -119,7 +119,7 @@ var findTextInImage = function(imagePath, chatID, language) {
     lang: language
   })
   // .progress(function (p) { console.log('progress', p)  })
-  .catch(err => console.error(err))
+  .catch(function(err) { console.error(err) } )
   .then(function (result) {
     var resultTextLines = result.text.replace(/ /gi, '').split('\n')
     for (var i in resultTextLines) {
@@ -136,10 +136,10 @@ var findTextInImage = function(imagePath, chatID, language) {
         // break;
       }
     }
-    recentSchedule.timeStart = Number( firstLine.slice(2, 4) )
-    recentSchedule.timeEnd = Number( secondLine.slice(2, 4).replace('O','') ) + 12
-    if(recentSchedule.timeStart !== 12){
-      recentSchedule.timeStart += 12
+    recentSchedule.timeStart = firstLine.slice(2, 7)
+    recentSchedule.timeEnd = (parseInt(secondLine.slice(2,4)) + 12) + secondLine.slice(4,7)
+    if(recentSchedule.timeStart.slice(0,2) !== '12'){
+      recentSchedule.timeStart = (parseInt(recentSchedule.timeStart.slice(0,2)) + 12) + recentSchedule.timeStart.slice(2)
     }
     recentSchedule.place = lastLine.slice(lastLine.indexOf('일') + 1, lastLine.indexOf('예'))
     recentSchedule.date = lastLine.slice(0, lastLine.indexOf('일') + 1)
@@ -208,8 +208,8 @@ var registerSchedule = function(chatID){
 var registerScheduleByText = function(message) {
   var messageArray = message.split(' ')
   recentSchedule.initData()
-  recentSchedule.timeStart =  parseInt(messageArray[2])
-  recentSchedule.timeEnd = parseInt(messageArray[3])
+  recentSchedule.timeStart = messageArray[2]
+  recentSchedule.timeEnd = messageArray[3]
   recentSchedule.place = messageArray[4]
   recentSchedule.date = messageArray[1]
   attendance.setDate(recentSchedule.date)
