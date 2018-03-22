@@ -150,11 +150,11 @@ var findTextInImage = function(imagePath, chatID, language) {
 
     // console.log(firstLine, secondLine, lastLine, recentSchedule)
     systemMessageBotSettingComplete(chatID)
-    ISREADYTOSERVE = true
     if(chatID){
       sendSchedule(chatID)
     }
   }).finally(function(){
+    ISREADYTOSERVE = true
     // delete cropped image
     fs.unlinkSync(imagePath)
   })
