@@ -19,6 +19,8 @@ const TARGETIMAGE = 'images/recent.png'
 const ATTENDFILEPATH = 'data/attend.json'
 const ATTENDDEFAULTFILEPATH = 'data/attend_default.json'
 
+var ISREADYTOSERVE = false
+
 const TIMEZONEOFFSET = new Date().getTimezoneOffset() * 60000
 
 const ATTENDASK = {
@@ -147,6 +149,7 @@ var findTextInImage = function(imagePath, chatID, language) {
 
     // console.log(firstLine, secondLine, lastLine, recentSchedule)
     systemMessageBotSettingComplete(chatID)
+    ISREADYTOSERVE = true
     if(chatID){
       sendSchedule(chatID)
     }
@@ -223,6 +226,10 @@ bot.on('message', function (msg, match) {
     try {
       var message = msg.text
       // console.log('from on: ', msg)
+      if (!ISREADYTOSERVE) {
+        bot.sendMessage(chatID, '개발제한구역관리자가 서비스 준비중입니다. 잠시만 기다려주세요.')
+        return
+      }
       if (msg.document) {
         if(msg.document.mine_type === 'image/png') {
           extractTextFromImage(msg.document.file_id, chatID)
@@ -269,7 +276,7 @@ bot.on('message', function (msg, match) {
 
 // process for inline_keyboard
 bot.on('callback_query', function(response) {
-  console.log('callback_query', response)
+  // console.log('callback_query', response)
   var chatID = response.message.chat.id
   var fromID = response.from.id
   var name = makeName(response.from)
@@ -297,7 +304,7 @@ registerSchedule()
 // Weekly routine is running every Friday at 9:30pm
 var remindSchedule = new CronJob('00 30 19 * * 5', function () {
   if (attendance.totelResponseCount() < 5) {
-    if (groupChatID !== undefined || groupChatID !== null) {
+    if (groupChatID !== undefined && groupChatID !== null) {
       bot.sendMessage(groupChatID, '[알림] 참석/불참을 안하신 분들은 참석/불참 여부 등록을 부탁드립니다.', {
         reply_markup: {
           keyboard: [
