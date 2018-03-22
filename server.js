@@ -9,6 +9,7 @@ var config = require('./config'),
   image = require('./lib/image'),
   recentSchedule = require('./lib/schedule'),
   attendance = require('./lib/attendance')
+  booking = require('./lib/booking')
 
   // Create a bot that uses 'polling' to fetch new updates
   bot = new TelegramBot(config.token, { polling: true })
@@ -149,11 +150,11 @@ var findTextInImage = function(imagePath, chatID, language) {
 
     // console.log(firstLine, secondLine, lastLine, recentSchedule)
     systemMessageBotSettingComplete(chatID)
-    ISREADYTOSERVE = true
     if(chatID){
       sendSchedule(chatID)
     }
   }).finally(function(){
+    ISREADYTOSERVE = true
     // delete cropped image
     fs.unlinkSync(imagePath)
   })
@@ -202,6 +203,7 @@ var registerSchedule = function(chatID){
     image.processForOCR(TARGETIMAGE, IMAGELOOT + '/recent_processed.png', findTextInImage, chatID, 'custom')
   } else {
     console.log(TARGETIMAGE + ' is not exist.')
+    ISREADYTOSERVE = true
     if(chatID){
       bot.sendMessage(chatID, '저에게 일정 이미지를 보내신적이 없습니다. 일정 이미지를 보내신 후 다시 시도해주세요.')
     }
@@ -227,7 +229,14 @@ bot.on('message', function (msg, match) {
       var message = msg.text
       // console.log('from on: ', msg)
       if (!ISREADYTOSERVE) {
-        bot.sendMessage(chatID, '개발제한구역관리자가 서비스 준비중입니다. 잠시만 기다려주세요.')
+        // console.log('block message', message, msg.document, msg.photo)
+        if ( (message && message.indexOf('/') === 0) || 
+              msg.document || 
+              msg.photo
+        ){
+          // console.log('block message send message')
+          bot.sendMessage(chatID, '개발제한구역관리자가 서비스 준비중입니다. 잠시만 기다려주세요.')
+        }
         return
       }
       if (msg.document) {
@@ -302,7 +311,7 @@ systemMessageBotStart()
 registerSchedule()
 
 // Weekly routine is running every Friday at 9:30pm
-var remindSchedule = new CronJob('00 30 19 * * 5', function () {
+new CronJob('00 30 19 * * 5', function () {
   if (attendance.totelResponseCount() < 5) {
     if (groupChatID !== undefined && groupChatID !== null) {
       bot.sendMessage(groupChatID, '[알림] 참석/불참을 안하신 분들은 참석/불참 여부 등록을 부탁드립니다.', {
@@ -316,5 +325,10 @@ var remindSchedule = new CronJob('00 30 19 * * 5', function () {
       })
     }
   }
-})
-remindSchedule.start()
+}).start()
+
+// Weekly routine is running every Saterday at 00:00am
+new CronJob('10 00 00 * * 6', function () {
+  booking()
+  bot.sendMessage(adminAccountID, '자동예약이 실행되었습니다. 스케쥴을 확인해주세요.')  
+}).start()

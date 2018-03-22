@@ -18,9 +18,11 @@
   "author": "nGenius",
   "license": "MIT",
   "dependencies": {
+    "axios": "^0.18.0",
     "bluebird": "^3.4.7",
     "cron": "^1.2.1",
     "gm": "^1.23.0",
+    "is-url": "^1.2.2",
     "node-telegram-bot-api": "^0.27.0",
     "tesseract.js": "^1.0.10",
     "uuid": "^3.0.1"
