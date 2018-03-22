@@ -203,6 +203,7 @@ var registerSchedule = function(chatID){
     image.processForOCR(TARGETIMAGE, IMAGELOOT + '/recent_processed.png', findTextInImage, chatID, 'custom')
   } else {
     console.log(TARGETIMAGE + ' is not exist.')
+    ISREADYTOSERVE = true
     if(chatID){
       bot.sendMessage(chatID, '저에게 일정 이미지를 보내신적이 없습니다. 일정 이미지를 보내신 후 다시 시도해주세요.')
     }
