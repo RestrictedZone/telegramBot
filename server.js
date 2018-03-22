@@ -9,6 +9,7 @@ var config = require('./config'),
   image = require('./lib/image'),
   recentSchedule = require('./lib/schedule'),
   attendance = require('./lib/attendance')
+  booking = require('./lib/booking')
 
   // Create a bot that uses 'polling' to fetch new updates
   bot = new TelegramBot(config.token, { polling: true })
@@ -302,7 +303,7 @@ systemMessageBotStart()
 registerSchedule()
 
 // Weekly routine is running every Friday at 9:30pm
-var remindSchedule = new CronJob('00 30 19 * * 5', function () {
+new CronJob('00 30 19 * * 5', function () {
   if (attendance.totelResponseCount() < 5) {
     if (groupChatID !== undefined && groupChatID !== null) {
       bot.sendMessage(groupChatID, '[알림] 참석/불참을 안하신 분들은 참석/불참 여부 등록을 부탁드립니다.', {
@@ -316,5 +317,10 @@ var remindSchedule = new CronJob('00 30 19 * * 5', function () {
       })
     }
   }
-})
-remindSchedule.start()
+}).start()
+
+// Weekly routine is running every Saterday at 00:00am
+new CronJob('10 00 00 * * 6', function () {
+  booking()
+  bot.sendMessage(adminAccountID, '자동예약이 실행되었습니다. 스케쥴을 확인해주세요.')  
+}).start()

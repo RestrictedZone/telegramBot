@@ -18,6 +18,7 @@
   "author": "nGenius",
   "license": "MIT",
   "dependencies": {
+    "axios": "^0.18.0",
     "bluebird": "^3.4.7",
     "cron": "^1.2.1",
     "gm": "^1.23.0",
