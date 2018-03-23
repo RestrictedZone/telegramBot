@@ -229,7 +229,14 @@ bot.on('message', function (msg, match) {
       var message = msg.text
       // console.log('from on: ', msg)
       if (!ISREADYTOSERVE) {
-        bot.sendMessage(chatID, '개발제한구역관리자가 서비스 준비중입니다. 잠시만 기다려주세요.')
+        // console.log('block message', message, msg.document, msg.photo)
+        if ( (message && message.indexOf('/') === 0) || 
+              msg.document || 
+              msg.photo
+        ){
+          // console.log('block message send message')
+          bot.sendMessage(chatID, '개발제한구역관리자가 서비스 준비중입니다. 잠시만 기다려주세요.')
+        }
         return
       }
       if (msg.document) {
