@@ -269,7 +269,7 @@ bot.on('message', function (msg, match) {
           setAttendDataMessage(chatID, true)
         }
         if (chatID === adminAccountID) {
-          if (/^일정입력\|/.test(message) || /^일정등록\|/.test(message)) {
+          if (/^일정입력 /.test(message) || /^일정등록 /.test(message)) {
             console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + " " + "관리자가 일정을 입력했습니다.");
             registerScheduleByText(message);
             sendSchedule(chatID);
