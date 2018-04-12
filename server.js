@@ -211,7 +211,7 @@ var registerSchedule = function(chatID){
 }
 
 var registerScheduleByText = function(message) {
-  var messageArray = message.split(' ')
+  var messageArray = message.split('|')
   recentSchedule.initData()
   recentSchedule.timeStart = messageArray[2]
   recentSchedule.timeEnd = messageArray[3]
