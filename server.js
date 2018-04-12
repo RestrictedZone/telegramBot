@@ -144,7 +144,7 @@ var findTextInImage = function(imagePath, chatID, language) {
     if(recentSchedule.timeStart.slice(0,2) !== '12'){
       recentSchedule.timeStart = (parseInt(recentSchedule.timeStart.slice(0,2)) + 12) + recentSchedule.timeStart.slice(2)
     }
-    recentSchedule.place = lastLine.slice(lastLine.indexOf('일') + 1, lastLine.indexOf('예'))
+    recentSchedule.place = '카우엔독 2층\n' + lastLine.slice(lastLine.indexOf('일') + 1, lastLine.indexOf('예'))
     recentSchedule.date = lastLine.slice(0, lastLine.indexOf('일') + 1)
     attendance.setDate(recentSchedule.date)
 
