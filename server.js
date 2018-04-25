@@ -47,8 +47,8 @@ const systemMessageBotStart = function () {
 const systemMessageBotSettingComplete = function () {
   bot.sendMessage(adminAccountID, '개발제한구역 관리자가 서비스 준비를 마쳤습니다.')
 }
-const systemMessageUnknownError = function (chatID) {
-  bot.sendMessage(chatID, '알수 없는 애러가 발생했습니다. 관리자가 수정할 때 까지 요청을 자제해주세요.')
+const systemMessageUnknownError = function (chatID, error) {
+  bot.sendMessage(chatID, '알수 없는 애러가 발생했습니다. 관리자가 수정할 때 까지 요청을 자제해주세요.' + error)
 }
 const systemMessageCheckImage = function (chatID) {
   bot.sendMessage(chatID, '이미지 확인 중 입니다. 잠시만 기다려주세요.')
@@ -139,21 +139,27 @@ var findTextInImage = function(imagePath, chatID, language) {
         // break;
       }
     }
-    recentSchedule.timeStart = firstLine.replace(/ /g,'').replace(/O/gi,'0').slice(2, 7)
-    recentSchedule.timeEnd = (parseInt(secondLine.replace(/ /g,'').replace(/O/gi,'0').slice(2,4)) + 12) + secondLine.replace(/ /g,'').replace(/O/gi,'0').slice(4,7)
-    if(recentSchedule.timeStart.slice(0,2) !== '12'){
-      recentSchedule.timeStart = (parseInt(recentSchedule.timeStart.slice(0,2)) + 12) + recentSchedule.timeStart.slice(2)
-    }
-    recentSchedule.place = '카우엔독 2층\n' + lastLine.slice(lastLine.indexOf('일') + 1, lastLine.indexOf('예'))
-    recentSchedule.date = lastLine.slice(0, lastLine.indexOf('일') + 1)
-    attendance.setDate(recentSchedule.date)
+    try {
+      recentSchedule.timeStart = firstLine.replace(/ /g,'').replace(/O/gi,'0').slice(2, 7)
+      recentSchedule.timeEnd = (parseInt(secondLine.replace(/ /g,'').replace(/O/gi,'0').slice(2,4)) + 12) + secondLine.replace(/ /g,'').replace(/O/gi,'0').slice(4,7)
+      if(recentSchedule.timeStart.slice(0,2) !== '12'){
+        recentSchedule.timeStart = (parseInt(recentSchedule.timeStart.slice(0,2)) + 12) + recentSchedule.timeStart.slice(2)
+      }
+      recentSchedule.place = '카우엔독 2층\n' + lastLine.slice(lastLine.indexOf('일') + 1, lastLine.indexOf('예'))
+      recentSchedule.date = lastLine.slice(0, lastLine.indexOf('일') + 1)
+      attendance.setDate(recentSchedule.date)
 
-    // console.log(firstLine, secondLine, lastLine, recentSchedule)
-    systemMessageBotSettingComplete(chatID)
-    if(chatID){
-      sendSchedule(chatID)
+      // console.log(firstLine, secondLine, lastLine, recentSchedule)
+      if(chatID){
+        sendSchedule(chatID)
+      }
+    } catch (error) {
+      console.log(error)
+      systemMessageUnknownError(chatID, error)
     }
+    
   }).finally(function(){
+    systemMessageBotSettingComplete(chatID)
     ISREADYTOSERVE = true
     // delete cropped image
     fs.unlinkSync(imagePath)
