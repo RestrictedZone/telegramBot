@@ -10,6 +10,7 @@ var config = require('./config'),
   recentSchedule = require('./lib/schedule'),
   attendance = require('./lib/attendance')
   booking = require('./lib/booking')
+  checkReservation = require('./lib/checkReservation')
 
   // Create a bot that uses 'polling' to fetch new updates
   bot = new TelegramBot(config.token, { polling: true })
@@ -335,3 +336,35 @@ new CronJob('00 30 19 * * 5', function () {
     }
   }
 }).start()
+
+
+// Weekly routine is running every Saterday at 00:00am 
+new CronJob('10 00 00 * * 6', function () { 
+  booking() 
+  bot.sendMessage(adminAccountID, '자동예약이 실행되었습니다. 스케쥴을 확인해주세요.')   
+}).start()
+
+
+// Weekly routine is running every Sunday at 00:00am 
+new CronJob('10 00 00 * * 0', function () { 
+  checkReservation().then(function(response) {
+    for (let schedule of response.data.response) {
+      if(schedule.organization === '개발제한구역') {
+        let reservationDateStart = new Date(schedule.start * 1000 + 1000*60*60*9).toISOString()
+        let reservationDateEnd = new Date(schedule.end * 1000 + 1000*60*60*9).toISOString()
+        recentSchedule.initData()
+        recentSchedule.timeStart = reservationDateStart.slice(11,16)
+        recentSchedule.timeEnd = reservationDateEnd.slice(11,16)
+        recentSchedule.place = schedule.location
+        recentSchedule.date = reservationDateStart.slice(0,10).replace('-', '년').replace('-', '월') + '일'
+        attendance.setDate(recentSchedule.date)
+        attendance.getMessage(true)
+        attendance.saveToFile()
+        bot.sendMessage(adminAccountID, '이번주 토요일 카우엔독 예약로 스케쥴이 변경 되었습니다.')
+        break;
+      }
+    }    
+  })   
+}).start()
+
+
