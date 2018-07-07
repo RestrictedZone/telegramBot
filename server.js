@@ -61,7 +61,7 @@ const systemMessageIncorrectImage = function (chatID) {
   bot.sendMessage(chatID, '일정 정보 이미지가 아닙니다. 이미지를 확인하시고 다시 보내주세요.')
 }
 const setAttendDataMessage = function (chatID, onlyShow) {
-  bot.sendMessage(chatID, attendance.getMessage(), onlyShow ? {} : ATTENDASK)
+  bot.sendMessage(chatID, attendance.getMessage(true), onlyShow ? {} : ATTENDASK)
 }
 
 const sendSchedule = function(chatID, textOnly){
@@ -316,7 +316,7 @@ bot.on('callback_query', function(response) {
       setAbsent(fromID, name)
       break
   }
-  bot.editMessageText(attendance.getMessage(), {
+  bot.editMessageText(attendance.getMessage(true), {
     'chat_id': response.message.chat.id,
     'message_id': response.message.message_id
   })
