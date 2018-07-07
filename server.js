@@ -148,7 +148,7 @@ var findTextInImage = function(imagePath, chatID, language) {
       }
       recentSchedule.place = '카우엔독 2층\n' + lastLine.slice(lastLine.indexOf('일') + 1, lastLine.indexOf('예'))
       recentSchedule.date = lastLine.slice(0, lastLine.indexOf('일') + 1)
-      attendance.setDate(recentSchedule.date)
+      attendance.setDate(recentSchedule.date, true)
 
       // console.log(firstLine, secondLine, lastLine, recentSchedule)
       if(chatID){
@@ -227,7 +227,7 @@ var registerScheduleByText = function(message) {
   recentSchedule.timeEnd = messageArray[3]
   recentSchedule.place = messageArray[4]
   recentSchedule.date = messageArray[1]
-  attendance.setDate(recentSchedule.date)
+  attendance.setDate(recentSchedule.date, true)
 }
 
 // Listen for any kind of message. There are different kinds of messages.
@@ -357,7 +357,7 @@ new CronJob('10 00 00 * * 0', function () {
         recentSchedule.timeEnd = reservationDateEnd.slice(11,16)
         recentSchedule.place = schedule.location
         recentSchedule.date = reservationDateStart.slice(0,10).replace('-', '년').replace('-', '월') + '일'
-        attendance.setDate(recentSchedule.date)
+        attendance.setDate(recentSchedule.date, true)
         attendance.getMessage(true)
         attendance.saveToFile()
         bot.sendMessage(adminAccountID, '이번주 토요일 카우엔독 예약로 스케쥴이 변경 되었습니다.')
