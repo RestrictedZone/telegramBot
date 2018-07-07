@@ -48,6 +48,9 @@ const systemMessageBotStart = function () {
 const systemMessageBotSettingComplete = function () {
   bot.sendMessage(adminAccountID, '개발제한구역 관리자가 서비스 준비를 마쳤습니다.')
 }
+const systemMessageResetAttendList = function () {
+  bot.sendMessage(adminAccountID, '일정 참석 인원 정보가 초기화 되었습니다.')
+}
 const systemMessageUnknownError = function (chatID, error) {
   bot.sendMessage(chatID, '알수 없는 애러가 발생했습니다. 관리자가 수정할 때 까지 요청을 자제해주세요.' + error)
 }
@@ -283,6 +286,9 @@ bot.on('message', function (msg, match) {
             console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + " " + "관리자가 일정을 입력했습니다.");
             registerScheduleByText(message);
             sendSchedule(chatID);
+          } else if (/^참석인원(리셋|초기화)$/.test(message)) {
+            attendance.resetAttendee()
+            systemMessageResetAttendList()
           }
         }
       }
