@@ -48,6 +48,9 @@ const systemMessageBotStart = function () {
 const systemMessageBotSettingComplete = function () {
   bot.sendMessage(adminAccountID, '개발제한구역 관리자가 서비스 준비를 마쳤습니다.')
 }
+const systemMessageResetAttendList = function () {
+  bot.sendMessage(adminAccountID, '일정 참석 인원 정보가 초기화 되었습니다.')
+}
 const systemMessageUnknownError = function (chatID, error) {
   bot.sendMessage(chatID, '알수 없는 애러가 발생했습니다. 관리자가 수정할 때 까지 요청을 자제해주세요.' + error)
 }
@@ -58,7 +61,7 @@ const systemMessageIncorrectImage = function (chatID) {
   bot.sendMessage(chatID, '일정 정보 이미지가 아닙니다. 이미지를 확인하시고 다시 보내주세요.')
 }
 const setAttendDataMessage = function (chatID, onlyShow) {
-  bot.sendMessage(chatID, attendance.getMessage(), onlyShow ? {} : ATTENDASK)
+  bot.sendMessage(chatID, attendance.getMessage(true), onlyShow ? {} : ATTENDASK)
 }
 
 const sendSchedule = function(chatID, textOnly){
@@ -283,6 +286,9 @@ bot.on('message', function (msg, match) {
             console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + " " + "관리자가 일정을 입력했습니다.");
             registerScheduleByText(message);
             sendSchedule(chatID);
+          } else if (/^참석인원(리셋|초기화)$/.test(message)) {
+            attendance.resetAttendee()
+            systemMessageResetAttendList()
           }
         }
       }
@@ -310,7 +316,7 @@ bot.on('callback_query', function(response) {
       setAbsent(fromID, name)
       break
   }
-  bot.editMessageText(attendance.getMessage(), {
+  bot.editMessageText(attendance.getMessage(true), {
     'chat_id': response.message.chat.id,
     'message_id': response.message.message_id
   })
