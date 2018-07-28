@@ -260,24 +260,24 @@ bot.on('message', function (msg, match) {
         extractTextFromImage(msg.photo[msg.photo.length - 1].file_id, chatID)
       } else if (message) {
         var name = makeName(msg.from)
-        if (/\/scheduletext/.test(message)) {
+        if (/^\/scheduletext/.test(message)) {
           console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 스케쥴(텍스트만)을 요청하셨습니다.')
           // printRecentScheduleObject()
           sendSchedule(chatID, true)
-        } else if (/\/schedule/.test(message)) {
+        } else if (/^\/schedule/.test(message)) {
           console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 스케쥴을 요청하셨습니다.')
           sendSchedule(chatID)
-        } else if (/\/joinlist/.test(message)) {
+        } else if (/^\/joinlist/.test(message)) {
           console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 참석인원정보를 요청하셨습니다.')
           if(attendance.isResponsedPerson(chatID)){
             setAttendDataMessage(chatID, true)
           } else {
             setAttendDataMessage(chatID)
           }
-        } else if (/\/attend/.test(message) || /^참석$/.test(message)) {
+        } else if (/^\/attend/.test(message) || /^참석$/.test(message)) {
           setAttend(fromID, name)
           setAttendDataMessage(chatID, true)
-        } else if (/\/absent/.test(message) || /^불참$/.test(message)) {
+        } else if (/^\/absent/.test(message) || /^불참$/.test(message)) {
           setAbsent(fromID, name)
           setAttendDataMessage(chatID, true)
         }
