@@ -9,7 +9,8 @@ var config = require('./config'),
   image = require('./lib/image'),
   recentSchedule = require('./lib/schedule'),
   attendance = require('./lib/attendance')
-  booking = require('./lib/booking')
+  booking = require('./lib/booking').booking
+  checkBooking = require('./lib/booking').checkBooking
   checkReservation = require('./lib/checkReservation')
 
   // Create a bot that uses 'polling' to fetch new updates
@@ -350,6 +351,33 @@ new CronJob('10 00 00 * * 6', function () {
   bot.sendMessage(adminAccountID, '자동예약이 실행되었습니다. 스케쥴을 확인해주세요.')   
 }).start()
 
+new CronJob('00 01 00 * * 6', function() {
+  const nowDate = new Date(Date.now() - TIMEZONEOFFSET)
+  nowDate.setDate(nowDate.getDate() + 14);
+  const dateString = nowDate
+    .toISOString()
+    .replace(/-/gi, "")
+    .slice(0, 8);
+  checkBooking(dateString).then(function (res) {
+    const reservtionList = res.data.response // array
+    // console.log(reservtionList)
+    let isBookStatusOK = false
+    for (const bookData of reservtionList) {
+      if(
+        bookData.organization === '개발제한구역' &&
+        bookData.title === '스터디' &&
+        bookData.contact === 'imsukmin@gmail.c'
+      ) {
+        isBookStatusOK = true
+        bot.sendMessage(adminAccountID, '자동예약이 실행결과: 예약이 정상적으로 되었습니다.')
+        break
+      }
+    }
+    if(!isBookStatusOK){
+      bot.sendMessage(adminAccountID, '자동예약이 실행결과: 예약이 되지 않았습니다. 카우엔독 웹에서 일정을 확인해주세요. https://app.cowndog.com/#/app/room')
+    }
+  })
+}).start()
 
 // Weekly routine is running every Sunday at 00:00am 
 new CronJob('10 00 00 * * 0', function () { 
@@ -372,5 +400,3 @@ new CronJob('10 00 00 * * 0', function () {
     }    
   })   
 }).start()
-
-
