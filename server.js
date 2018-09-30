@@ -87,8 +87,7 @@ const sendSchedule = function(chatID, textOnly){
     fs.writeFileSync('data/이번주_개발제한구역일정.ics', recentSchedule.eventICSString())
     bot.sendDocument(chatID, 'data/이번주_개발제한구역일정.ics')
   } else {
-    bot.sendMessage(chatID, '등록된 일정이 없습니다. 저장된 일정 정보 불러오기를 시도합니다. 1분 후 다시 시도해주세요. 같은 메시지를 보셨다면 일정 등록을 위한 일정 이미지를 업로드 해주세요.')
-    registerSchedule(chatID) 
+    bot.sendMessage(chatID, '등록된 일정이 없습니다. 관리자에게 문의해주세요.')
   }
 }
 
