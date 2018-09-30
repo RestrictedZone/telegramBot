@@ -2,6 +2,7 @@ node_modules
 images/recent.png
 data/*.ics
 data/attend.json
+data/schedule.json
 *.traineddata
 config/index.js
 test/*

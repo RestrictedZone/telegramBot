@@ -20,7 +20,6 @@ var config = require('./config'),
 const IMAGELOOT = 'images'
 const TARGETIMAGE = 'images/recent.png'
 const ATTENDFILEPATH = 'data/attend.json'
-const ATTENDDEFAULTFILEPATH = 'data/attend_default.json'
 
 var ISREADYTOSERVE = false
 
@@ -118,7 +117,7 @@ const printRecentScheduleObject = function () {
 }
 
 // ocr by tesseract
-var findTextInImage = function(imagePath, chatID, language) {
+const findTextInImage = function(imagePath, chatID, language) {
   if(language == 'undefined' || language == null){
     language = 'kor'
   }
@@ -144,13 +143,22 @@ var findTextInImage = function(imagePath, chatID, language) {
       }
     }
     try {
-      recentSchedule.timeStart = firstLine.replace(/ /g,'').replace(/O/gi,'0').slice(2, 7)
-      recentSchedule.timeEnd = (parseInt(secondLine.replace(/ /g,'').replace(/O/gi,'0').slice(2,4)) + 12) + secondLine.replace(/ /g,'').replace(/O/gi,'0').slice(4,7)
-      if(recentSchedule.timeStart.slice(0,2) !== '12'){
-        recentSchedule.timeStart = (parseInt(recentSchedule.timeStart.slice(0,2)) + 12) + recentSchedule.timeStart.slice(2)
+      var tempSchedule = {
+        timeStart: firstLine.replace(/ /g,'').replace(/O/gi,'0').slice(2, 7),
+        timeEnd: (parseInt(secondLine.replace(/ /g,'').replace(/O/gi,'0').slice(2,4)) + 12) + secondLine.replace(/ /g,'').replace(/O/gi,'0').slice(4,7),
+        place: '카우엔독 2층\n' + lastLine.slice(lastLine.indexOf('일') + 1, lastLine.indexOf('예')),
+        date: lastLine.slice(0, lastLine.indexOf('일') + 1)
       }
-      recentSchedule.place = '카우엔독 2층\n' + lastLine.slice(lastLine.indexOf('일') + 1, lastLine.indexOf('예'))
-      recentSchedule.date = lastLine.slice(0, lastLine.indexOf('일') + 1)
+      if(recentSchedule.timeStart.slice(0,2) !== '12'){
+        tempSchedule.timeStart = (parseInt(recentSchedule.timeStart.slice(0,2)) + 12) + recentSchedule.timeStart.slice(2)
+      }
+      recentSchedule.setData(
+        tempSchedule.date,
+        tempSchedule.timeStart,
+        tempSchedule.timeEnd,
+        tempSchedule.place
+      )
+      recentSchedule.exportJSON()
       attendance.setDate(recentSchedule.date, true)
 
       // console.log(firstLine, secondLine, lastLine, recentSchedule)
@@ -226,10 +234,13 @@ var registerSchedule = function(chatID){
 var registerScheduleByText = function(message) {
   var messageArray = message.split('|')
   recentSchedule.initData()
-  recentSchedule.timeStart = messageArray[2]
-  recentSchedule.timeEnd = messageArray[3]
-  recentSchedule.place = messageArray[4]
-  recentSchedule.date = messageArray[1]
+  recentSchedule.setData(
+    messageArray[1],
+    messageArray[4],
+    messageArray[2],
+    messageArray[3]
+  )
+  recentSchedule.exportJSON()
   attendance.setDate(recentSchedule.date, true)
 }
 
@@ -350,9 +361,13 @@ new CronJob('10 00 00 * * 0', function () {
   const nowTime = new Date(Date.now() + 1000*60*60*9)
   const saturdayTime = new Date(Date.now() + 1000*60*60*9 + 1000*60*60*24*6)
   recentSchedule.initData()
-  recentSchedule.date = saturdayTime.toISOString().slice(0, 10).replace('-', '년').replace('-', '월') + '일'
-  recentSchedule.timeStart = '14:00'
-  recentSchedule.timeEnd = '18:00'
-  recentSchedule.place = 'ICT타워, 11층'
+  recentSchedule.setData(
+    saturdayTime.toISOString().slice(0, 10).replace('-', '년').replace('-', '월') + '일',
+    '14:00',
+    '18:00',
+    'ICT타워, 11층'
+  )
+  recentSchedule.exportJSON()
+
   attendance.setDate(recentSchedule.date, true)
 }).start()
