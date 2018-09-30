@@ -353,7 +353,7 @@ new CronJob('10 00 00 * * 0', function () {
   recentSchedule.initData()
   recentSchedule.date = saturdayTime.toISOString().slice(0, 10).replace('-', '년').replace('-', '월') + '일'
   recentSchedule.timeStart = '14:00'
-  recentSchedule.timeEnd = '20:00(미정)'
-  recentSchedule.place = '강남대로 624, 11층'
+  recentSchedule.timeEnd = '18:00'
+  recentSchedule.place = 'ICT타워, 11층'
   attendance.setDate(recentSchedule.date, true)
 }).start()
