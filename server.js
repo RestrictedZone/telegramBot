@@ -287,6 +287,8 @@ bot.on('message', function (msg, match) {
             console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + " " + "관리자가 일정을 입력했습니다.");
             registerScheduleByText(message);
             sendSchedule(chatID);
+          } else if (/^장소변경 $/.test(message)) {
+
           } else if (/^참석인원(리셋|초기화)$/.test(message)) {
             attendance.resetAttendee()
             systemMessageResetAttendList()
@@ -344,3 +346,14 @@ new CronJob('00 30 19 * * 5', function () {
   }
 }).start()
 
+// Weekly routine is running every Sunday at 00:00am 
+new CronJob('10 00 00 * * 0', function () { 
+  const nowTime = new Date(Date.now() + 1000*60*60*9)
+  const saturdayTime = new Date(Date.now() + 1000*60*60*9 + 1000*60*60*24*6)
+  recentSchedule.initData()
+  recentSchedule.date = saturdayTime.toISOString().slice(0, 10).replace('-', '년').replace('-', '월') + '일'
+  recentSchedule.timeStart = '14:00'
+  recentSchedule.timeEnd = '20:00(미정)'
+  recentSchedule.place = '강남대로 624, 11층'
+  attendance.setDate(recentSchedule.date, true)
+}).start()
