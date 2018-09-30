@@ -345,58 +345,58 @@ new CronJob('00 30 19 * * 5', function () {
 }).start()
 
 
-// Weekly routine is running every Saterday at 00:00am 
-new CronJob('10 00 00 * * 6', function () { 
-  booking() 
-  bot.sendMessage(adminAccountID, '자동예약이 실행되었습니다. 스케쥴을 확인해주세요.')   
-}).start()
+// // Weekly routine is running every Saterday at 00:00am 
+// new CronJob('10 00 00 * * 6', function () { 
+//   booking() 
+//   bot.sendMessage(adminAccountID, '자동예약이 실행되었습니다. 스케쥴을 확인해주세요.')   
+// }).start()
 
-new CronJob('00 01 00 * * 6', function() {
-  const nowDate = new Date(Date.now() - TIMEZONEOFFSET)
-  nowDate.setDate(nowDate.getDate() + 14);
-  const dateString = nowDate
-    .toISOString()
-    .replace(/-/gi, "")
-    .slice(0, 8);
-  checkBooking(dateString).then(function (res) {
-    const reservtionList = res.data.response // array
-    // console.log(reservtionList)
-    let isBookStatusOK = false
-    for (const bookData of reservtionList) {
-      if(
-        bookData.organization === '개발제한구역' &&
-        bookData.title === '스터디' &&
-        bookData.contact === 'imsukmin@gmail.c'
-      ) {
-        isBookStatusOK = true
-        bot.sendMessage(adminAccountID, '자동예약이 실행결과: 예약이 정상적으로 되었습니다.')
-        break
-      }
-    }
-    if(!isBookStatusOK){
-      bot.sendMessage(adminAccountID, '자동예약이 실행결과: 예약이 되지 않았습니다. 카우엔독 웹에서 일정을 확인해주세요. https://app.cowndog.com/#/app/room')
-    }
-  })
-}).start()
+// new CronJob('00 01 00 * * 6', function() {
+//   const nowDate = new Date(Date.now() - TIMEZONEOFFSET)
+//   nowDate.setDate(nowDate.getDate() + 14);
+//   const dateString = nowDate
+//     .toISOString()
+//     .replace(/-/gi, "")
+//     .slice(0, 8);
+//   checkBooking(dateString).then(function (res) {
+//     const reservtionList = res.data.response // array
+//     // console.log(reservtionList)
+//     let isBookStatusOK = false
+//     for (const bookData of reservtionList) {
+//       if(
+//         bookData.organization === '개발제한구역' &&
+//         bookData.title === '스터디' &&
+//         bookData.contact === 'imsukmin@gmail.c'
+//       ) {
+//         isBookStatusOK = true
+//         bot.sendMessage(adminAccountID, '자동예약이 실행결과: 예약이 정상적으로 되었습니다.')
+//         break
+//       }
+//     }
+//     if(!isBookStatusOK){
+//       bot.sendMessage(adminAccountID, '자동예약이 실행결과: 예약이 되지 않았습니다. 카우엔독 웹에서 일정을 확인해주세요. https://app.cowndog.com/#/app/room')
+//     }
+//   })
+// }).start()
 
-// Weekly routine is running every Sunday at 00:00am 
-new CronJob('10 00 00 * * 0', function () { 
-  checkReservation().then(function(response) {
-    for (let schedule of response.data.response) {
-      if(schedule.organization === '개발제한구역') {
-        let reservationDateStart = new Date(schedule.start * 1000 + 1000*60*60*9).toISOString()
-        let reservationDateEnd = new Date(schedule.end * 1000 + 1000*60*60*9).toISOString()
-        recentSchedule.initData()
-        recentSchedule.timeStart = reservationDateStart.slice(11,16)
-        recentSchedule.timeEnd = reservationDateEnd.slice(11,16)
-        recentSchedule.place = schedule.location
-        recentSchedule.date = reservationDateStart.slice(0,10).replace('-', '년').replace('-', '월') + '일'
-        attendance.setDate(recentSchedule.date, true)
-        attendance.getMessage(true)
-        attendance.saveToFile()
-        bot.sendMessage(adminAccountID, '이번주 토요일 카우엔독 예약로 스케쥴이 변경 되었습니다.')
-        break;
-      }
-    }    
-  })   
-}).start()
+// // Weekly routine is running every Sunday at 00:00am 
+// new CronJob('10 00 00 * * 0', function () { 
+//   checkReservation().then(function(response) {
+//     for (let schedule of response.data.response) {
+//       if(schedule.organization === '개발제한구역') {
+//         let reservationDateStart = new Date(schedule.start * 1000 + 1000*60*60*9).toISOString()
+//         let reservationDateEnd = new Date(schedule.end * 1000 + 1000*60*60*9).toISOString()
+//         recentSchedule.initData()
+//         recentSchedule.timeStart = reservationDateStart.slice(11,16)
+//         recentSchedule.timeEnd = reservationDateEnd.slice(11,16)
+//         recentSchedule.place = schedule.location
+//         recentSchedule.date = reservationDateStart.slice(0,10).replace('-', '년').replace('-', '월') + '일'
+//         attendance.setDate(recentSchedule.date, true)
+//         attendance.getMessage(true)
+//         attendance.saveToFile()
+//         bot.sendMessage(adminAccountID, '이번주 토요일 카우엔독 예약로 스케쥴이 변경 되었습니다.')
+//         break;
+//       }
+//     }    
+//   })   
+// }).start()
