@@ -1,29 +1,20 @@
-var fs = require('fs'),
-  gm = require('gm'),
-  Tesseract = require('tesseract.js'),
+const fs = require('fs'),
   TelegramBot = require('node-telegram-bot-api'),
-  Promise = require('bluebird'),
-  CronJob = require("cron").CronJob;
+  CronJob = require("cron").CronJob
 
-var config = require('./config'),
-  image = require('./lib/image'),
-  recentSchedule = require('./lib/schedule'),
+const config = require('./config'),
+  schedule = require('./lib/schedules'),
   attendance = require('./lib/attendance')
-  booking = require('./lib/booking').booking
-  checkBooking = require('./lib/booking').checkBooking
-  checkReservation = require('./lib/checkReservation')
+
+const { getScheduleMessage, eventLinkToGoogle, eventICSString } = require('./lib/tools')
 
   // Create a bot that uses 'polling' to fetch new updates
   bot = new TelegramBot(config.token, { polling: true })
 
 // CONST list
-const IMAGELOOT = 'images'
-const TARGETIMAGE = 'images/recent.png'
-const ATTENDFILEPATH = 'data/attend.json'
+const TIMESTAMP =( Date.now() - new Date().getTimezoneOffset() * 60000 )
 
-var ISREADYTOSERVE = false
-
-const TIMEZONEOFFSET = new Date().getTimezoneOffset() * 60000
+const getISOTimeString = () => (new Date(TIMESTAMP).toISOString())
 
 const ATTENDASK = {
   reply_markup: {
@@ -54,49 +45,43 @@ const systemMessageResetAttendList = function () {
 const systemMessageUnknownError = function (chatID, error) {
   bot.sendMessage(chatID, '알수 없는 애러가 발생했습니다. 관리자가 수정할 때 까지 요청을 자제해주세요.' + error)
 }
-const systemMessageCheckImage = function (chatID) {
-  bot.sendMessage(chatID, '이미지 확인 중 입니다. 잠시만 기다려주세요.')
-}
-const systemMessageIncorrectImage = function (chatID) {
-  bot.sendMessage(chatID, '일정 정보 이미지가 아닙니다. 이미지를 확인하시고 다시 보내주세요.')
-}
 const setAttendDataMessage = function (chatID, onlyShow) {
   bot.sendMessage(chatID, attendance.getMessage(true), onlyShow ? {} : ATTENDASK)
 }
 
 const sendSchedule = function(chatID, textOnly){
-  if(recentSchedule.isExisted()){
-    if(textOnly){
-      bot.sendMessage(chatID, recentSchedule.scheduleMessage())
-      return
-    }
-
-    bot.sendMessage(chatID, recentSchedule.scheduleMessage(), {
-      reply_markup: {
-        inline_keyboard: [
-          [{text: '구글 켈린더에 등록하기(링크)', url: recentSchedule.eventLinkToGoogle()}]
-        ],
+  try {
+    schedule.getLatestSchesule().then(info => {
+      if(textOnly){
+        bot.sendMessage(chatID, getScheduleMessage(info))
+        return
       }
+  
+      bot.sendMessage(chatID, getScheduleMessage(info), {
+        reply_markup: {
+          inline_keyboard: [
+            [{text: '구글 켈린더에 등록하기(링크)', url: eventLinkToGoogle(info)}]
+          ],
+        }
+      })
+      // make ics file
+      const icsFilePath = 'data/이번주_개발제한구역일정.ics'
+      fs.writeFileSync(icsFilePath, eventICSString(info))
+      bot.sendDocument(chatID, icsFilePath)
     })
-    // make ics file
-    if(!fs.existsSync('./data/')){
-      console.log('make "data" directory!')
-      fs.mkdirSync('data')
-    }
-    fs.writeFileSync('data/이번주_개발제한구역일정.ics', recentSchedule.eventICSString())
-    bot.sendDocument(chatID, 'data/이번주_개발제한구역일정.ics')
-  } else {
-    bot.sendMessage(chatID, '등록된 일정이 없습니다. 관리자에게 문의해주세요.')
+  } catch(e) {
+    console.log('error in sendMessage!!', e)
+    // bot.sendMessage(chatID, '등록된 일정이 없습니다. 관리자에게 문의해주세요.')
   }
 }
 
 const setAttend = function (chatID, name) {
-  console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 참석의사를 표현하셨습니다.')
+  console.log(getISOTimeString() + ' ' + name + '님이 참석의사를 표현하셨습니다.')
   attendance.addAttend(chatID, name)
 }
 
 const setAbsent = function (chatID, name) {
-  console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 불참의사를 표현하셨습니다.')
+  console.log(getISOTimeString() + ' ' + name + '님이 불참의사를 표현하셨습니다.')
   attendance.addAbsent(chatID, name)
 }
 
@@ -110,138 +95,24 @@ const makeName = function (dataFrom) {
 
 // print log
 const printRecentScheduleObject = function () {
-  console.log( JSON.stringify(recentSchedule.getData()) )
-  console.log( recentSchedule.scheduleMessage() )
-  console.log( recentSchedule.eventLinkToGoogle() )
-  console.log( recentSchedule.eventICSString() )
-}
 
-// ocr by tesseract
-const findTextInImage = function(imagePath, chatID, language) {
-  if(language == 'undefined' || language == null){
-    language = 'kor'
-  }
-  Tesseract.recognize(imagePath, {
-    lang: language
+  schedule.getLatestSchesule().then(info => {
+    console.log( getScheduleMessage(info) )
+    console.log( eventLinkToGoogle(info) )
+    console.log( eventICSString(info) )
   })
-  // .progress(function (p) { console.log('progress', p)  })
-  .catch(function(err) { console.error(err) } )
-  .then(function (result) {
-    var resultTextLines = result.text.replace(/ /gi, '').split('\n')
-    for (var i in resultTextLines) {
-      // console.log(i, resultTextLines[i])
-      
-      if (resultTextLines[i].indexOf('개발제한구역') > 0) {
-        // console.log('find firstline', resultTextLines[i])
-        var firstLine = resultTextLines[i]
-        var secondLine = resultTextLines[parseInt(i) + 1]
-      }
-      if (resultTextLines[i].indexOf('예약') > 0) {
-        // console.log('find lastLine', resultTextLines[i])
-        var lastLine = resultTextLines[i]
-        // break;
-      }
-    }
-    try {
-      var tempSchedule = {
-        timeStart: firstLine.replace(/ /g,'').replace(/O/gi,'0').slice(2, 7),
-        timeEnd: (parseInt(secondLine.replace(/ /g,'').replace(/O/gi,'0').slice(2,4)) + 12) + secondLine.replace(/ /g,'').replace(/O/gi,'0').slice(4,7),
-        place: '카우엔독 2층\n' + lastLine.slice(lastLine.indexOf('일') + 1, lastLine.indexOf('예')),
-        date: lastLine.slice(0, lastLine.indexOf('일') + 1)
-      }
-      if(recentSchedule.timeStart.slice(0,2) !== '12'){
-        tempSchedule.timeStart = (parseInt(recentSchedule.timeStart.slice(0,2)) + 12) + recentSchedule.timeStart.slice(2)
-      }
-      recentSchedule.setData(
-        tempSchedule.date,
-        tempSchedule.timeStart,
-        tempSchedule.timeEnd,
-        tempSchedule.place
-      )
-      recentSchedule.exportJSON()
-      attendance.setDate(recentSchedule.date, true)
-
-      // console.log(firstLine, secondLine, lastLine, recentSchedule)
-      if(chatID){
-        sendSchedule(chatID)
-      }
-    } catch (error) {
-      console.log(error)
-      systemMessageUnknownError(chatID, error)
-    }
-    
-  }).finally(function(){
-    systemMessageBotSettingComplete(chatID)
-    if(chatID){
-      sendSchedule(chatID)
-    }
-    ISREADYTOSERVE = true
-    // delete cropped image
-    fs.unlinkSync(imagePath)
-  })
-}
-
-var extractTextFromImage = function (file_id, chatID) {
-  bot.downloadFile(file_id, IMAGELOOT)
-  .then(function(downloadedFilepath){
-    new Promise(function(resolve, reject){
-      if(adminAccountID !== undefined && chatID === adminAccountID) {
-        systemMessageCheckImage(chatID)
-      }
-      fs.chmodSync(downloadedFilepath, 777)
-      if(fs.existsSync(TARGETIMAGE)){
-        image.compare(downloadedFilepath, TARGETIMAGE, resolve)
-      } else {
-        resolve(true)
-      }
-    }).then(function(isTargetImage){
-      if(isTargetImage){
-        fs.renameSync(downloadedFilepath, TARGETIMAGE)
-        registerSchedule(chatID)
-      } else {
-        console.log('This image is not TARGET image!')
-        if(adminAccountID !== undefined && chatID === adminAccountID) {
-          systemMessageIncorrectImage(chatID)
-        }
-        fs.unlinkSync(downloadedFilepath)
-      }
-    }).catch(console.log.bind(console))
-  })
-}
-
-var registerSchedule = function(chatID){
-  if(fs.existsSync(TARGETIMAGE)){
-    // initialization recentSchedule data
-    recentSchedule.initData()
-    if(chatID !== undefined && fs.existsSync(ATTENDFILEPATH)){ 
-      // init process  
-      fs.unlinkSync(ATTENDFILEPATH)
-    }
-    if (chatID !== undefined) {
-      attendance.setDataFromFile()
-    }
-    // make image better for OCR
-    image.processForOCR(TARGETIMAGE, IMAGELOOT + '/recent_processed.png', findTextInImage, chatID, 'custom')
-  } else {
-    console.log(TARGETIMAGE + ' is not exist.')
-    ISREADYTOSERVE = true
-    if(chatID){
-      bot.sendMessage(chatID, '저에게 일정 이미지를 보내신적이 없습니다. 일정 이미지를 보내신 후 다시 시도해주세요.')
-    }
-  }
 }
 
 var registerScheduleByText = function(message) {
   var messageArray = message.split('|')
-  recentSchedule.initData()
-  recentSchedule.setData(
-    messageArray[1],
-    messageArray[4],
+  schedule.insert(
+    messageArray[1].replace(/(년|월)/gi, '-').replace('일', ''),
     messageArray[2],
-    messageArray[3]
+    messageArray[3],
+    messageArray[4]
   )
-  recentSchedule.exportJSON()
-  attendance.setDate(recentSchedule.date, true)
+
+  attendance.setDate(messageArray[1], true)
 }
 
 // Listen for any kind of message. There are different kinds of messages.
@@ -251,35 +122,18 @@ bot.on('message', function (msg, match) {
   if(chatID === groupChatID || chatID === adminAccountID){
     try {
       var message = msg.text
-      // console.log('from on: ', msg)
-      if (!ISREADYTOSERVE) {
-        // console.log('block message', message, msg.document, msg.photo)
-        if ( (message && message.indexOf('/') === 0) || 
-              msg.document || 
-              msg.photo
-        ){
-          // console.log('block message send message')
-          bot.sendMessage(chatID, '개발제한구역관리자가 서비스 준비중입니다. 잠시만 기다려주세요.')
-        }
-        return
-      }
-      if (msg.document) {
-        if(msg.document.mine_type === 'image/png') {
-          extractTextFromImage(msg.document.file_id, chatID)
-        }
-      } else if (msg.photo) {
-        extractTextFromImage(msg.photo[msg.photo.length - 1].file_id, chatID)
-      } else if (message) {
+
+      if (message) {
         var name = makeName(msg.from)
         if (/^\/scheduletext/.test(message)) {
-          console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 스케쥴(텍스트만)을 요청하셨습니다.')
+          console.log(getISOTimeString() + ' ' + name + '님이 스케쥴(텍스트만)을 요청하셨습니다.')
           // printRecentScheduleObject()
           sendSchedule(chatID, true)
         } else if (/^\/schedule/.test(message)) {
-          console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 스케쥴을 요청하셨습니다.')
+          console.log(getISOTimeString() + ' ' + name + '님이 스케쥴을 요청하셨습니다.')
           sendSchedule(chatID)
         } else if (/^\/joinlist/.test(message)) {
-          console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + ' ' + name + '님이 참석인원정보를 요청하셨습니다.')
+          console.log(getISOTimeString() + ' ' + name + '님이 참석인원정보를 요청하셨습니다.')
           if(attendance.isResponsedPerson(chatID)){
             setAttendDataMessage(chatID, true)
           } else {
@@ -294,10 +148,10 @@ bot.on('message', function (msg, match) {
         }
         if (chatID === adminAccountID) {
           if (/^일정입력 /.test(message) || /^일정등록 /.test(message)) {
-            console.log(new Date(Date.now() - TIMEZONEOFFSET).toISOString() + " " + "관리자가 일정을 입력했습니다.");
+            console.log(getISOTimeString() + " " + "관리자가 일정을 입력했습니다.");
             registerScheduleByText(message);
             sendSchedule(chatID);
-          } else if (/^장소변경 $/.test(message)) {
+          } else if (/^장소변경 /.test(message)) {
 
           } else if (/^참석인원(리셋|초기화)$/.test(message)) {
             attendance.resetAttendee()
@@ -315,7 +169,7 @@ bot.on('message', function (msg, match) {
 // process for inline_keyboard
 bot.on('callback_query', function(response) {
   // console.log('callback_query', response)
-  var chatID = response.message.chat.id
+  // var chatID = response.message.chat.id
   var fromID = response.from.id
   var name = makeName(response.from)
   var replyData = response.data
@@ -337,7 +191,6 @@ bot.on('callback_query', function(response) {
 
 // init schedule data
 systemMessageBotStart()
-registerSchedule()
 
 // Weekly routine is running every Friday at 9:30pm
 new CronJob('00 30 19 * * 5', function () {
@@ -356,18 +209,18 @@ new CronJob('00 30 19 * * 5', function () {
   }
 }).start()
 
-// Weekly routine is running every Sunday at 00:00am 
-new CronJob('10 00 00 * * 0', function () { 
-  const nowTime = new Date(Date.now() + 1000*60*60*9)
-  const saturdayTime = new Date(Date.now() + 1000*60*60*9 + 1000*60*60*24*6)
-  recentSchedule.initData()
-  recentSchedule.setData(
-    saturdayTime.toISOString().slice(0, 10).replace('-', '년').replace('-', '월') + '일',
-    '14:00',
-    '18:00',
-    'ICT타워, 11층'
-  )
-  recentSchedule.exportJSON()
+// // Weekly routine is running every Monday at 00:00am 
+// new CronJob('10 00 00 * * 1', function () { 
+//   const nowTime = new Date(Date.now() + 1000*60*60*9)
+//   const saturdayTime = new Date(Date.now() + 1000*60*60*9 + 1000*60*60*24*5)
+//   const sundayTime = new Date(Date.now() + 1000*60*60*9 + 1000*60*60*24*6)
+//   schedule.insert(
+//    // saturdayTime.toISOString().slice(0, 10).replace('-', '년').replace('-', '월') + '일',
+//     sundayTime.toISOString().slice(0, 10).replace('-', '년').replace('-', '월') + '일',
+//     '14:00',
+//     4,
+//     '장소 미정'
+//   )
 
-  attendance.setDate(recentSchedule.date, true)
-}).start()
+//   attendance.setDate(recentSchedule.date, true)
+// }).start()
